@@ -6,6 +6,7 @@
 - 처음 세팅: **ledger-setup** ("장부 세팅해 줘")
 - 비용·크레딧 갱신: **ledger-refresh** ("장부 갱신해 줘") — Chrome에서 청구 화면을 읽는다. 읽을 곳은 `data/cost-sources.json`.
 - 정리: **ledger-tidy** ("장부 정리해 줘") — 레포 스캔, 새 서비스 정리, 용도 설명 다듬기.
+- 코드 업데이트: **ledger-update** ("장부 업데이트해 줘") — 템플릿의 새 코드를 받는다. 데이터는 그대로.
 
 ## 규칙
 - 장부는 `node scripts/merge.mjs <projects|services> <id> '<json>'`로 고친다. JSON을 손으로 고치지 않는다.
@@ -25,3 +26,6 @@
 - prepaid: `remaining`, `burn`(월 소진), `credits[{name,left,total,expires,kind:'paid'|'promo'|'trial',note}]`.
 - monthly/yearly: `amount`, `nextDate`.
 - 공통: `name, provider, category, status, projectId, usedBy[{p,why}], url, note, updatedAt, autoAt, autoSource`.
+
+## 템플릿 관리 (템플릿 레포에서 코드를 고칠 때만)
+코드(페이지·스크립트·스킬·Actions)를 고친 뒤 `node scripts/bump.mjs <x.y.z> "바뀐 점"`으로 버전을 올리고 커밋·푸시한다. 그러면 받아 간 사람들의 장부 페이지에 새 버전 알림이 뜨고, 각자 "장부 업데이트해 줘"로 받는다. `data/`의 템플릿 기본값(빈 장부, 빈 설정)은 받은 사람에게 전달되지 않으니, 새 규칙은 `data/signatures.json`에 더한다(업데이트 때 합쳐진다).

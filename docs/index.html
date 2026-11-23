@@ -522,6 +522,7 @@ function ghConnectHtml(){
 }
 function renderNotices(){
   const out = [];
+  if (S.newVer) out.push(`<div class="notice"><span><b>새 버전 ${esc(S.newVer)}</b>이 있어요 (지금 ${APP_VERSION}). Claude에게 <b>"장부 업데이트해 줘"</b>라고 하면 데이터는 그대로 두고 코드만 바꿔요. <a href="https://github.com/${UPSTREAM}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">바뀐 점 ↗</a></span><button class="btn ghost" data-act="skipVer">닫기</button></div>`);
   if (S.local) out.push(`<div class="notice"><span>이 컴퓨터의 <code>data/ledger.json</code>을 열고 있어요. 저장하면 파일에 바로 써요. GitHub에 올리려면 커밋·푸시하거나 Claude에게 "장부 올려 줘"라고 하세요.</span></div>`);
   else if (S.mode === 'gh' && (!GH.token || S.ghErr)) out.push(ghConnectHtml());
   else if (S.failed) out.push(`<div class="notice err">저장소에 연결하지 못했어요. claude.ai에 로그인한 상태로 열어야 데이터가 보이고 저장돼요.</div>`);
@@ -1126,6 +1127,7 @@ document.addEventListener('click', async e => {
   else if (act === 'clearEx'){
     $('#exArea').innerHTML = `<span class="confirm" style="color:var(--fg)">예시 항목을 모두 지울까요? <button class="btn danger" data-act="clearExYes">지우기</button><button class="btn ghost" data-act="clearExNo">아니요</button></span>`;
   }
+  else if (act === 'skipVer'){ lsSet('ledger.skipVer', S.newVer); S.newVer = null; renderNotices(); }
   else if (act === 'ghOut'){ ['ledger.token', 'ledger.repo', 'ledger.login'].forEach(k => lsSet(k, '')); location.reload(); }
   else if (act === 'clearExNo') renderNotices();
   else if (act === 'clearExYes') clearExamples();
@@ -1148,6 +1150,18 @@ $('#fxInput').addEventListener('change', async e => {
 function lsGet(k){ try { return localStorage.getItem(k) || ''; } catch { return ''; } }
 function lsSet(k, v){ try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} }
 const GH = {repo: lsGet('ledger.repo'), path: 'data/ledger.json', token: lsGet('ledger.token'), login: lsGet('ledger.login')};
+// 이 페이지의 버전과 새 버전을 확인할 템플릿 레포 (scripts/bump.mjs 가 같이 올린다)
+const APP_VERSION = '1.1.0';
+const UPSTREAM = 'fkal829/service-cost-ledger-template';
+const verGt = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++){ if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
+async function checkUpdate(){
+  try {
+    const r = await fetch(`https://raw.githubusercontent.com/${UPSTREAM}/main/VERSION`, {cache:'no-store'});
+    if (!r.ok) return;
+    const v = (await r.text()).trim();
+    if (/^\d+\.\d+\.\d+$/.test(v) && verGt(v, APP_VERSION) && lsGet('ledger.skipVer') !== v){ S.newVer = v; renderNotices(); }
+  } catch {}
+}
 const b64dec = t => new TextDecoder().decode(Uint8Array.from(atob(t.replace(/\s/g, '')), c => c.charCodeAt(0)));
 const b64enc = t => { const b = new TextEncoder().encode(t); let bin = ''; for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode(...b.subarray(i, i + 0x8000)); return btoa(bin); };
 function ghStore(){
@@ -1216,6 +1230,7 @@ function ghStore(){
 /* ---------- boot ---------- */
 S.view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'costs';
 render();
+checkUpdate();
 (async () => {
   // claude.ai 안에서 열면 장부 저장소(사본), 그 밖에서는 GitHub 레포의 data/ledger.json(원본)을 쓴다
   const inClaude = !!window.claude?.use;
