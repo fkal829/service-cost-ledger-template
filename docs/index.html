@@ -201,6 +201,8 @@ button.pcard:hover{border-color:var(--line-strong)}
 .drawer footer{border-top:1px solid var(--line);padding:12px 18px;display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap}
 .drawer footer .r{display:flex;gap:8px;margin-left:auto}
 [hidden]{display:none!important}
+.ghlogin{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.ghlogin .btn{display:inline-flex}
 .notice.gh{display:block}
 .ghform{display:flex;flex-direction:column;gap:8px}
 .ghform code{font-family:'IBM Plex Mono',monospace;font-size:12px}
@@ -501,7 +503,21 @@ function render(){
 
 function ghConnectHtml(){
   const why = S.ghErr === 401 ? '토큰이 틀렸거나 만료됐어요.' : S.ghErr === 404 ? '레포를 찾지 못했어요. 이름과 토큰 권한(Contents)을 확인해 주세요.' : S.ghErr === 403 ? '토큰에 이 레포 권한이 없어요.' : S.ghErr && S.ghErr !== 'notoken' ? '불러오지 못했어요. 잠시 후 다시 시도해 주세요.' : '';
-  return `<div class="notice gh"><form id="ghForm" class="ghform" autocomplete="off">
+  const viaApp = lsGet('ledger.via') === 'app';
+  if (AUTH_SERVER && GH.token && viaApp && S.ghErr === 404) return `<div class="notice gh"><div class="ghform">
+    <b>로그인은 됐어요${GH.login ? ` (${esc(GH.login)})` : ''}. 데이터 레포에 앱을 설치해 주세요</b>
+    <span class="hint">이 대시보드는 허락한 레포만 읽을 수 있어요. 설치 화면에서 <b>Only select repositories</b> → <code>${esc((GH.repo || '').split('/')[1] || 'service-cost-ledger')}</code> 하나만 고르세요.</span>
+    <div><a class="btn primary" href="https://github.com/apps/${APP_SLUG}/installations/new">데이터 레포에 설치하기</a> <button class="btn ghost" data-act="ghOut">다른 계정으로</button></div>
+    <span class="hint">아직 데이터 레포가 없으면 Claude Code나 Codex에서 <b>초기 세팅</b>부터 해 주세요.</span>
+  </div></div>`;
+  const loginBox = AUTH_SERVER ? `<div class="ghlogin">
+    <b>GitHub로 로그인하면 내 데이터가 보여요</b>
+    ${S.ghInstalled ? '<span class="hint">설치됐어요. 한 번 더 로그인해 주세요.</span>' : ''}
+    ${S.ghLoginErr ? '<span class="hint" style="color:var(--crit)">로그인을 마치지 못했어요. 다시 눌러 주세요.</span>' : ''}
+    <div><a class="btn primary" href="#" data-act="ghLogin">GitHub로 로그인</a></div>
+    <span class="hint">데이터는 내 GitHub 비공개 레포(기본 <code>service-cost-ledger</code>)에 있어요. 이 페이지는 내가 허락한 그 레포만 읽고 써요.</span>
+  </div>` : '';
+  return `<div class="notice gh">${loginBox}<form id="ghForm" class="ghform" autocomplete="off"${AUTH_SERVER ? ' hidden' : ''}>
     <b>GitHub에 연결</b>
     <span class="hint">데이터는 GitHub 계정마다 따로예요. 내 계정의 비공개 레포(기본 이름 <code>service-cost-ledger</code>)에 <code>data/ledger.json</code> 파일로 저장돼요. 그 레포만 고른 fine-grained 토큰(Contents 읽기·쓰기)을 넣어 주세요. 레포가 비어 있으면 빈 데이터로 시작해요. 토큰은 이 브라우저에만 저장돼요.</span>
     ${why ? `<span class="hint" style="color:var(--crit)">${why}</span>` : ''}
@@ -519,7 +535,7 @@ function ghConnectHtml(){
       </ol>
       <span class="hint">토큰은 GitHub에서 한 번만 보여 줘요. 이 브라우저에만 저장되고 다른 곳으로 보내지 않아요. 기기를 바꾸면 새로 넣거나, 같은 토큰을 비밀번호 관리자에 보관해 두고 쓰세요. 잃어버리거나 의심되면 <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener">토큰 목록 ↗</a>에서 지우고 새로 만들면 돼요.</span>
     </details>
-  </form></div>`;
+  </form>${AUTH_SERVER ? `<details class="howto"><summary>토큰으로 연결 (예비)</summary><div class="hint">로그인 서버가 안 될 때만 써요.</div><button class="btn ghost" data-act="ghTokenForm">토큰 입력 칸 열기</button></details>` : ''}</div>`;
 }
 function renderNotices(){
   const out = [];
@@ -679,7 +695,7 @@ function ledgerList(){
 }
 
 function loadingOrEmpty(el, what){
-  if (S.mode === 'gh' && S.failed){ el.innerHTML = `<div class="empty"><strong>GitHub에 연결하면 내 데이터가 보여요</strong>위에서 토큰을 넣어 주세요.</div>`; return true; }
+  if (S.mode === 'gh' && S.failed){ el.innerHTML = `<div class="empty"><strong>GitHub에 연결하면 내 데이터가 보여요</strong>${AUTH_SERVER ? '위에서 GitHub로 로그인해 주세요.' : '위에서 토큰을 넣어 주세요.'}</div>`; return true; }
   if (!(S.got.p && S.got.s) && !S.failed){ el.innerHTML = `<div class="empty"><strong>불러오는 중이에요</strong>잠시만 기다려 주세요.</div>`; return true; }
   if (what){ el.innerHTML = what; return true; }
   return false;
@@ -1134,7 +1150,9 @@ document.addEventListener('click', async e => {
     $('#exArea').innerHTML = `<span class="confirm" style="color:var(--fg)">예시 항목을 모두 지울까요? <button class="btn danger" data-act="clearExYes">지우기</button><button class="btn ghost" data-act="clearExNo">아니요</button></span>`;
   }
   else if (act === 'skipVer'){ lsSet('ledger.skipVer', S.newVer); S.newVer = null; renderNotices(); }
-  else if (act === 'ghOut'){ ['ledger.token', 'ledger.repo', 'ledger.login'].forEach(k => lsSet(k, '')); location.reload(); }
+  else if (act === 'ghOut'){ ['ledger.token', 'ledger.repo', 'ledger.login', 'ledger.refresh', 'ledger.exp', 'ledger.via'].forEach(k => lsSet(k, '')); location.reload(); }
+  else if (act === 'ghLogin'){ e.preventDefault(); location.href = ghLoginUrl(); }
+  else if (act === 'ghTokenForm'){ const f = $('#ghForm'); if (f) f.hidden = false; }
   else if (act === 'clearExNo') renderNotices();
   else if (act === 'clearExYes') clearExamples();
 });
@@ -1155,7 +1173,42 @@ $('#fxInput').addEventListener('change', async e => {
 /* ---------- GitHub 원본 저장소 ---------- */
 function lsGet(k){ try { return localStorage.getItem(k) || ''; } catch { return ''; } }
 function lsSet(k, v){ try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} }
-const GH = {repo: lsGet('ledger.repo'), path: 'data/ledger.json', token: lsGet('ledger.token'), login: lsGet('ledger.login')};
+const GH = {repo: lsGet('ledger.repo'), path: 'data/ledger.json', token: lsGet('ledger.token'), login: lsGet('ledger.login'),
+  refresh: lsGet('ledger.refresh'), exp: Number(lsGet('ledger.exp')) || 0};
+// GitHub 로그인용 작은 서버와 GitHub App (비우면 로그인 버튼 없이 토큰 방식만 보인다)
+const AUTH_SERVER = '';
+const APP_SLUG = '';
+const ghLoginUrl = () => {
+  const st = Array.from(crypto.getRandomValues(new Uint8Array(18)), b => b.toString(16).padStart(2, '0')).join('');
+  try { sessionStorage.setItem('ledger.state', st); } catch {}
+  return `${AUTH_SERVER}/api/login?return=${encodeURIComponent(location.origin + location.pathname)}&state=${st}`;
+};
+// 로그인 서버가 돌려준 #gh=… 를 받아 저장한다 (주소에서는 바로 지운다)
+function takeLoginFromHash(){
+  const h = location.hash;
+  if (!/^#gh(=|_error=|_installed=)/.test(h)) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  if (h.startsWith('#gh_installed=')){ S.ghInstalled = true; return; }
+  if (h.startsWith('#gh_error=')){ S.ghLoginErr = decodeURIComponent(h.slice(10)); return; }
+  try {
+    const t = JSON.parse(atob(h.slice(4).replace(/-/g, '+').replace(/_/g, '/')));
+    let want = ''; try { want = sessionStorage.getItem('ledger.state') || ''; sessionStorage.removeItem('ledger.state'); } catch {}
+    if (!want || t.s !== want){ S.ghLoginErr = 'state'; return; }
+    lsSet('ledger.token', t.a); lsSet('ledger.refresh', t.rf || ''); lsSet('ledger.exp', String(t.e || 0)); lsSet('ledger.via', 'app');
+    GH.token = t.a; GH.refresh = t.rf || ''; GH.exp = t.e || 0;
+  } catch { S.ghLoginErr = 'parse'; }
+}
+async function refreshToken(){
+  if (!AUTH_SERVER || !GH.refresh) return false;
+  try {
+    const r = await fetch(AUTH_SERVER + '/api/refresh', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({refresh_token: GH.refresh})});
+    if (!r.ok) return false;
+    const t = await r.json();
+    lsSet('ledger.token', t.a); lsSet('ledger.refresh', t.rf || GH.refresh); lsSet('ledger.exp', String(t.e || 0));
+    GH.token = t.a; GH.refresh = t.rf || GH.refresh; GH.exp = t.e || 0;
+    return true;
+  } catch { return false; }
+}
 // 이 페이지의 버전과 새 버전을 확인할 템플릿 레포 (scripts/bump.mjs 가 같이 올린다)
 const APP_VERSION = '1.7.1';
 const UPSTREAM = 'fkal829/service-cost-ledger-template';
@@ -1173,8 +1226,15 @@ const b64enc = t => { const b = new TextEncoder().encode(t); let bin = ''; for (
 function ghStore(){
   let data = {settings:{}, projects:[], services:[]}, sha = null, loaded = false, local = false, lver = '';
   const subs = {projects:[], services:[], settings:[]};
-  const api = (path, o = {}) => fetch('https://api.github.com/repos/' + GH.repo + path, {...o, cache:'no-store',
+  const rawApi = (path, o = {}) => fetch('https://api.github.com/repos/' + GH.repo + path, {...o, cache:'no-store',
     headers:{Accept:'application/vnd.github+json', Authorization:'Bearer ' + GH.token, 'X-GitHub-Api-Version':'2022-11-28', ...(o.headers || {})}});
+  // 로그인 토큰은 8시간이면 끝나서, 끝나기 전이나 401이 나면 한 번 새로 받아 다시 시도한다
+  const api = async (path, o = {}) => {
+    if (GH.exp && GH.refresh && Date.now() > GH.exp - 60000) await refreshToken();
+    let r = await rawApi(path, o);
+    if (r.status === 401 && GH.refresh && await refreshToken()) r = await rawApi(path, o);
+    return r;
+  };
   const snap = arr => ({docs: arr.map(x => { const {id, ...rest} = x; return {id, data: () => rest}; }), metadata:{fromCache:false}});
   const emit = () => {
     subs.projects.forEach(f => f(snap(data.projects)));
@@ -1234,6 +1294,7 @@ function ghStore(){
 }
 
 /* ---------- boot ---------- */
+takeLoginFromHash();
 S.view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'costs';
 render();
 checkUpdate();
@@ -1244,6 +1305,12 @@ checkUpdate();
   const user = inClaude ? await window.claude.use('user').catch(() => null) : null;
   if (!inClaude){
     S.mode = 'gh';
+    if (GH.token && !GH.repo){
+      // GitHub로 로그인한 직후: 내 계정 이름으로 기본 데이터 레포를 정한다
+      if (GH.exp && GH.refresh && Date.now() > GH.exp - 60000) await refreshToken();
+      const me = await fetch('https://api.github.com/user', {headers:{Authorization:'Bearer ' + GH.token, Accept:'application/vnd.github+json'}}).then(r => r.ok ? r.json() : null).catch(() => null);
+      if (me){ GH.login = me.login; GH.repo = me.login + '/service-cost-ledger'; lsSet('ledger.login', GH.login); lsSet('ledger.repo', GH.repo); }
+    }
     db = ghStore();
     try { await db.load(); S.canWrite = db.writable(); }
     catch (e){ S.ghErr = e?.status || 'load'; S.failed = true; S.got = {p:true, s:true}; S.canWrite = false; S.db = null; render(); return; }
