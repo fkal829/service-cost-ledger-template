@@ -22,7 +22,7 @@ fkal829/service-cost-ledger-template 템플릿으로 내 비용 장부를 만들
 Claude가 알아서 해요:
 1. 내 GitHub에 **비공개** 레포 `service-cost-ledger`를 만들어 받아요.
 2. 내 레포들을 읽어 프로젝트와 외부 서비스를 정리해 장부를 채워요. 어느 계정·조직을 넣을지만 물어봐요.
-3. 매주 레포 스캔, 평일 비용 갱신을 Claude 앱 예약 작업으로 켜 줘요 (토큰 필요 없음).
+3. 비용을 어디서 읽을지(GCP, Claude Console 등) 물어보고 정해 둬요.
 4. 보는 방법을 알려 줘요.
 
 이미 장부 레포가 있으면, 그 폴더를 Claude Code로 열고 "장부 세팅해 줘"라고만 하면 돼요.
@@ -43,22 +43,19 @@ Claude가 알아서 해요:
 | 말하기 | 하는 일 |
 |---|---|
 | "장부 세팅해 줘" | 처음 한 번. 레포를 읽어 장부를 만들고 자동화를 안내 |
-| "장부 갱신해 줘" | Chrome에서 이미 로그인된 청구 화면(GCP, Claude Console, Vercel, OpenAI…)을 **읽기만** 해서 비용·크레딧을 갱신 |
-| "장부 정리해 줘" | 새 레포·새 서비스를 찾아 장부에 넣고 용도 설명을 다듬음 |
+| "장부 갱신해 줘" | 새 레포·서비스 확인 + Chrome에서 이미 로그인된 청구 화면(GCP, Claude Console, Vercel, OpenAI…)을 **읽기만** 해서 비용·크레딧 갱신 |
+| "장부 정리해 줘" | 갱신 때 찾은 새 레포·서비스의 설명을 코드를 읽고 다듬음, 애매한 것 물어봄 |
 | "장부 업데이트해 줘" | 이 템플릿의 새 버전 코드를 받음 (장부 데이터는 그대로). 새 버전이 나오면 장부 페이지 위에 알림이 떠요 |
 
 어느 Claude 계정이든 이 레포를 열면 같은 스킬(`.claude/skills/`)을 써요.
 
-## 자동 갱신
+## 갱신
 
-| 무엇 | 언제 | 어떻게 |
-|---|---|---|
-| 새 프로젝트·서비스 찾기 | 매주 월요일 | Claude 앱 예약 작업 (GitHub CLI 로그인 사용, 토큰 없음) |
-| 비용·크레딧 | 평일 아침 | Claude 앱 예약 작업이 Chrome에서 청구 화면을 읽음 |
+Claude에게 **"장부 갱신해 줘"** 한마디면 두 가지를 한 번에 해요. 정해진 시간에 혼자 도는 작업은 없어요.
+1. 내 GitHub 레포를 다시 훑어 새 프로젝트·새 서비스를 찾아요 (GitHub CLI 로그인을 써서 토큰 필요 없음).
+2. Chrome에서 이미 로그인된 청구 화면을 읽기만 해서 비용·크레딧을 적어요.
 
-둘 다 Claude 앱이 켜진 컴퓨터에서 돌아요. 꺼져 있으면 다음에 켤 때 돌아요.
-
-(고급) 컴퓨터가 꺼져 있어도 매주 스캔을 돌리려면 GitHub Actions `레포 스캔`을 쓸 수 있어요. 레포 **Settings → Secrets and variables → Actions**에 `LEDGER_SCAN_TOKEN`([classic token](https://github.com/settings/tokens/new?scopes=repo&description=cost-ledger-scan), `repo` 범위)을 넣으면 돼요.
+오래 갱신하지 않으면 장부 페이지 위에 "마지막 갱신 ○일 전" 알림이 떠요. 크레딧 만료 알림은 날짜로 계산하니까 갱신하지 않아도 떠요.
 
 ## 안전
 
@@ -69,4 +66,4 @@ Claude가 알아서 해요:
 ## 파일
 
 - `data/ledger.json` 장부 · `data/signatures.json` 서비스 알아보는 규칙 · `data/scan-config.json` 스캔 대상 · `data/cost-sources.json` 비용 읽을 곳
-- `docs/index.html` 장부 페이지 · `scripts/` 스캔·갱신·로컬 서버 · `.claude/skills/` Claude 스킬
+- `docs/index.html` 장부 페이지 · `scripts/` 레포 확인·장부 고치기·로컬 서버·업데이트 · `.claude/skills/` Claude 스킬

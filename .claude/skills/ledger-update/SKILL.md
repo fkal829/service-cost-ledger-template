@@ -9,12 +9,12 @@ description: 서비스 비용 장부의 코드(페이지, 스크립트, 스킬, 
 
 1. 작업 트리가 깨끗한지 `git status --short`로 본다. 커밋 안 된 변경이 있으면 무엇인지 보여 주고, 먼저 커밋할지 사용자에게 묻는다. `git pull --rebase`.
 2. 미리 보기: `node scripts/update-from-template.mjs` (이 스크립트가 없는 예전 레포면 아래 '스크립트가 없을 때'를 따른다).
-   결과 JSON의 `versionNow` → `versionTemplate`, `changed`, `added`, `signatureAdds`, `keptLocalOnly`를 사용자에게 짧게 보여 준다. 템플릿의 `CHANGELOG.md`(`git show FETCH_HEAD:CHANGELOG.md`)에서 지금 버전 이후 항목을 요약해 무엇이 좋아지는지 알려 준다.
+   결과 JSON의 `versionNow` → `versionTemplate`, `changed`, `added`, `removed`(템플릿에서 없앤 파일, 지운다), `signatureAdds`, `keptLocalOnly`를 사용자에게 짧게 보여 준다. 템플릿의 `CHANGELOG.md`(`git show FETCH_HEAD:CHANGELOG.md`)에서 지금 버전 이후 항목을 요약해 무엇이 좋아지는지 알려 준다.
    - 바뀔 게 없으면 "이미 최신이에요"라고 하고 끝낸다.
 3. 사용자가 직접 고친 코드 파일이 덮어써질 수 있다. `changed` 중 사용자가 고쳤을 법한 파일(예: `docs/index.html`, 스킬 파일)이 있으면 `git diff --no-index`나 `git diff HEAD FETCH_HEAD -- <파일>`로 차이를 보여 주고, 사용자가 원하면 그 파일은 빼고 적용한다 (빼려면 적용 뒤 `git checkout HEAD -- <파일>`).
 4. 사용자 확인을 받고 `node scripts/update-from-template.mjs --apply`.
 5. 확인: `node --check scripts/*.mjs`, JSON 파일 파싱(`node -e "JSON.parse(require('fs').readFileSync('data/signatures.json','utf8'))"`).
-6. 커밋·푸시: `git add -A docs scripts .github .claude CLAUDE.md VERSION CHANGELOG.md data/signatures.json data/upstream.json && git commit -m "장부: 템플릿 <versionTemplate>로 업데이트" && git push`. GitHub Pages를 쓰면 페이지 배포 Actions가 자동으로 돈다.
+6. 커밋·푸시: `git add -A docs scripts .github .claude CLAUDE.md VERSION CHANGELOG.md .ledger-removed data/signatures.json data/upstream.json && git commit -m "장부: 템플릿 <versionTemplate>로 업데이트" && git push`. GitHub Pages를 쓰면 페이지 배포 Actions가 자동으로 돈다.
 7. 보고: 새 버전, 바뀐 것 요약, 빼고 적용한 파일, 사용자가 할 일(있다면).
 
 ## 지킬 것

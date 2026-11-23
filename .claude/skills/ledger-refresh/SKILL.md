@@ -1,11 +1,11 @@
 ---
 name: ledger-refresh
-description: 서비스 비용 장부의 비용·크레딧을 갱신한다. 사용자의 Chrome에서 이미 로그인된 청구 화면(GCP, Claude Console, Vercel 등)을 읽기만 해서 data/ledger.json에 적고 커밋한다. "장부 갱신해 줘", "비용 갱신", "이번 달 비용 업데이트", 예약 작업의 비용 갱신 요청에 쓴다.
+description: 서비스 비용 장부를 갱신한다. 내 GitHub 레포를 다시 훑어 새 프로젝트·서비스를 찾고(gh 로그인 사용, 토큰 불필요), 사용자의 Chrome에서 이미 로그인된 청구 화면(GCP, Claude Console, Vercel 등)을 읽기만 해서 비용·크레딧을 data/ledger.json에 적고 커밋한다. "장부 갱신해 줘", "비용 갱신", "이번 달 비용 업데이트", 장부 페이지의 '갱신한 지 오래됐어요' 알림을 보고 한 요청에 쓴다.
 ---
 
-# 장부 비용 갱신
+# 장부 갱신 (레포 + 비용)
 
-장부 레포(`data/ledger.json`이 있는 레포)에서 실행한다. 현재 폴더가 아니면 사용자에게 레포 위치를 묻거나 `~/service-cost-ledger`를 찾아본다. 한국어로 보고한다.
+장부 레포(`data/ledger.json`이 있는 레포)에서 실행한다. 현재 폴더가 아니면 `~/service-cost-ledger`를 찾아보고, 없으면 사용자에게 위치를 묻는다. 한국어로 보고한다. 정해진 시간에 혼자 도는 작업은 없다. 사용자가 부를 때만 돈다.
 
 ## 안전 규칙 (항상)
 - 청구 화면은 **읽기만** 한다. 아래 레시피에 적힌 보고서 전환 말고는 누르지 않는다. 업그레이드, 결제, 크레딧 구매, 설정, 2단계 인증, 로그인 버튼은 절대 누르지 않고 비밀번호·코드를 입력하지 않는다.
@@ -15,13 +15,15 @@ description: 서비스 비용 장부의 비용·크레딧을 갱신한다. 사�
 
 ## 절차
 1. `git pull --rebase`.
-2. `data/cost-sources.json`을 읽는다. 없거나 비어 있으면 "비용을 읽어 올 곳이 정해지지 않았어요"라고 하고, 장부의 유료 서비스(`billing`이 usage·prepaid)와 그 `url`을 보여 주며 어떤 것을 등록할지 묻는다. 정해지면 아래 kind 형식으로 파일을 만든다.
-3. Claude in Chrome 도구를 ToolSearch 한 번으로 불러온다 (tabs_context_mcp, tabs_create_mcp, tabs_close_mcp, navigate, get_page_text, computer, find, browser_batch). 확장이 연결돼 있지 않으면 장부를 고치지 않고 그렇게 보고하고 끝낸다. 새 탭 하나에서만 일하고 끝나면 닫는다. 페이지는 navigate 후 4초쯤 기다린 뒤 get_page_text로 읽는다.
-4. 출처마다 아래 레시피대로 읽는다.
-5. 읽은 값을 `node scripts/merge.mjs services <id> '<json>'`으로 적는다. 지금 시각 `date +%s000`, 이번 달 `date +%Y-%m`. 모든 갱신에 `"updatedAt":<now>,"autoAt":<now>,"autoSource":"Chrome · <화면 이름>"`을 넣는다.
-6. `git add data/ledger.json && git commit -m "장부: 비용 갱신 $(date +%F)" && git push` (밀리면 `git pull --rebase` 후 다시).
-7. 레포에 `data/mirror.json`(`{"artifact":"<claude.ai 주소>"}`)이 있고 ArtifactData 도구를 쓸 수 있으면 사본도 맞춘다: projects·services를 `list`(out_dir)로 받고 `node scripts/mirror-plan.mjs <out_dir>` 결과에 각 문서 version을 `if_version`으로 붙여 50개씩 `batch`.
-8. 보고: 출처별 사용량 / 크레딧 차감 / 실제 청구, 선불 잔액(구매·프로모션 나눠서)과 30일 비용, 7일 안에 만료되는 크레딧과 사라질 금액, 무료 체험 종료까지 남은 날(14일 이하면 맨 위), 건너뛴 출처와 이유.
+2. **레포 확인**: `GH_TOKEN=$(gh auth token) node scripts/scan-repos.mjs`. 새로 추가된 프로젝트·서비스·연결과 `data/scan-report.md`의 "사람이 정할 것"을 기억해 둔다 (보고에 넣는다). 새 프로젝트가 있으면 그 레포의 README를 얕게 읽어 `desc`와 `runsOn`만 채워 둔다. 더 깊은 정리는 ledger-tidy가 한다.
+3. **비용 확인**: `data/cost-sources.json`을 읽는다. 없거나 비어 있으면 "비용을 읽어 올 곳이 정해지지 않았어요"라고 하고, 장부의 유료 서비스(`billing`이 usage·prepaid)와 그 `url`을 보여 주며 어떤 것을 등록할지 묻는다. 정해지면 아래 kind 형식으로 파일을 만든다.
+4. Claude in Chrome 도구를 ToolSearch 한 번으로 불러온다 (tabs_context_mcp, tabs_create_mcp, tabs_close_mcp, navigate, get_page_text, computer, find, browser_batch). 확장이 연결돼 있지 않으면 비용은 건너뛰고(레포 확인 결과는 적는다) 그렇게 보고한다. 새 탭 하나에서만 일하고 끝나면 닫는다. 페이지는 navigate 후 4초쯤 기다린 뒤 get_page_text로 읽는다.
+5. 출처마다 아래 레시피대로 읽는다.
+6. 읽은 값을 `node scripts/merge.mjs services <id> '<json>'`으로 적는다. 지금 시각 `date +%s000`, 이번 달 `date +%Y-%m`. 모든 갱신에 `"updatedAt":<now>,"autoAt":<now>,"autoSource":"Chrome · <화면 이름>"`을 넣는다.
+7. 갱신 시각을 남긴다: `node scripts/merge.mjs settings main '{"lastRefresh":<now>}'` (비용을 하나도 못 읽었어도 레포 확인을 했으면 남긴다).
+8. `git add data && git commit -m "장부: 갱신 $(date +%F)" && git push` (밀리면 `git pull --rebase` 후 다시).
+9. 레포에 `data/mirror.json`(`{"artifact":"<claude.ai 주소>"}`)이 있고 ArtifactData 도구를 쓸 수 있으면 사본도 맞춘다: projects·services를 `list`(out_dir)로 받고 `node scripts/mirror-plan.mjs <out_dir>` 결과에 각 문서 version을 `if_version`으로 붙여 50개씩 `batch`.
+10. 보고: 레포 확인 결과(새 프로젝트·서비스·연결, 사람이 정할 것이 있으면 "정리하려면 '장부 정리해 줘'"), 출처별 사용량 / 크레딧 차감 / 실제 청구, 선불 잔액(구매·프로모션 나눠서)과 30일 비용, 7일 안에 만료되는 크레딧과 사라질 금액, 무료 체험 종료까지 남은 날(14일 이하면 맨 위), 건너뛴 출처와 이유.
 
 ## 레시피 (kind별)
 

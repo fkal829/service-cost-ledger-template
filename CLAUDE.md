@@ -4,8 +4,8 @@
 
 ## 할 일별 스킬 (`.claude/skills/`)
 - 처음 세팅: **ledger-setup** ("장부 세팅해 줘")
-- 비용·크레딧 갱신: **ledger-refresh** ("장부 갱신해 줘") — Chrome에서 청구 화면을 읽는다. 읽을 곳은 `data/cost-sources.json`.
-- 정리: **ledger-tidy** ("장부 정리해 줘") — 레포 스캔, 새 서비스 정리, 용도 설명 다듬기.
+- 갱신: **ledger-refresh** ("장부 갱신해 줘") — 레포를 다시 훑고, Chrome에서 청구 화면을 읽어 비용을 적는다. 읽을 곳은 `data/cost-sources.json`. 정해진 시간에 도는 작업은 없다.
+- 정리: **ledger-tidy** ("장부 정리해 줘") — 새로 찾은 프로젝트·서비스 설명 다듬기, 애매한 것 묻기.
 - 코드 업데이트: **ledger-update** ("장부 업데이트해 줘") — 템플릿의 새 코드를 받는다. 데이터는 그대로.
 
 ## 규칙

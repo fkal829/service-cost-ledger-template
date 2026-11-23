@@ -18,9 +18,3 @@ description: 서비스 비용 장부를 정리한다. 레포 스캔을 돌리고
 5. 바뀐 게 있으면 `git add data && git commit -m "장부: 정리 $(date +%F)" && git push`.
 6. 보고: 무엇을 추가·수정했는지, 사용자에게 물어볼 것.
 
-## 예약 실행 (사람 없이 돌 때)
-예약 작업에서 실행되면 사용자에게 묻지 않는다.
-1. `git pull --rebase`.
-2. `GH_TOKEN=$(gh auth token) node scripts/scan-repos.mjs`.
-3. 바뀐 게 있으면 `git add data/ledger.json data/scan-report.md && git commit -m "장부: 레포 스캔 $(date +%F)" && git push`.
-4. 보고: 새 프로젝트·새 서비스·새 연결 수와, 사람이 정해야 할 것(규칙에 없는 키 이름, 보관된 레포 등). "정리하려면 '장부 정리해 줘'라고 하세요"로 끝낸다.

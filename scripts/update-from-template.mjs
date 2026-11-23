@@ -10,7 +10,7 @@ const ROOT = new URL('..', import.meta.url).pathname;
 const APPLY = process.argv.includes('--apply');
 const git = (...a) => execFileSync('git', ['-C', ROOT, ...a], { encoding: 'utf8', maxBuffer: 64 << 20 });
 // 템플릿에서 받아 올 코드 경로. README.md는 각자 고쳐 쓰는 경우가 많아 받지 않는다.
-const PATHS = ['docs', 'scripts', '.github/workflows', '.claude/skills', 'CLAUDE.md', 'VERSION', 'CHANGELOG.md'];
+const PATHS = ['docs', 'scripts', '.github/workflows', '.claude/skills', 'CLAUDE.md', 'VERSION', 'CHANGELOG.md', '.ledger-removed'];
 
 const upFile = join(ROOT, 'data/upstream.json');
 const up = existsSync(upFile) ? JSON.parse(readFileSync(upFile, 'utf8')) : { repo: 'fkal829/service-cost-ledger-template', branch: 'main' };
@@ -30,7 +30,9 @@ for (const f of upFiles){
   if (!existsSync(p)) added.push(f);
   else if (readFileSync(p, 'utf8') !== show(f)) changed.push(f);
 }
-const localOnly = git('ls-files', '--', ...PATHS).split('\n').filter(f => f && !upFiles.includes(f));
+// 템플릿에서 없앤 파일 (.ledger-removed 목록) 중 내 레포에 남아 있는 것
+const removed = (show('.ledger-removed') || '').split('\n').map(x => x.trim()).filter(x => x && !x.startsWith('#') && existsSync(join(ROOT, x)));
+const localOnly = git('ls-files', '--', ...PATHS).split('\n').filter(f => f && !upFiles.includes(f) && !removed.includes(f));
 
 // signatures.json: 템플릿의 새 서비스·새 규칙만 더한다
 const sigPath = join(ROOT, 'data/signatures.json');
@@ -50,11 +52,12 @@ const ign = (upSig.ignoreEnv || []).filter(x => !(sig.ignoreEnv || []).includes(
 if (ign.length){ sig.ignoreEnv = [...(sig.ignoreEnv || []), ...ign]; sigAdds.push(`ignoreEnv + ${ign.join(', ')}`); }
 
 const summary = { template: up.repo, templateCommit: head.slice(0, 7), versionNow: mine, versionTemplate: theirs,
-  changed, added, keptLocalOnly: localOnly, signatureAdds: sigAdds, applied: false };
+  changed, added, removed, keptLocalOnly: localOnly, signatureAdds: sigAdds, applied: false };
 
-if (APPLY && (changed.length || added.length || sigAdds.length)){
+if (APPLY && (changed.length || added.length || removed.length || sigAdds.length)){
   const files = [...changed, ...added];
   if (files.length) git('checkout', 'FETCH_HEAD', '--', ...files);
+  if (removed.length) git('rm', '-q', '--', ...removed);
   if (sigAdds.length) writeFileSync(sigPath, JSON.stringify(sig, null, 2) + '\n');
   if (!existsSync(upFile)) writeFileSync(upFile, JSON.stringify({ repo: up.repo, branch: up.branch || 'main' }, null, 2) + '\n');
   summary.applied = true;

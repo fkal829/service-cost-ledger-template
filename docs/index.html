@@ -522,6 +522,11 @@ function ghConnectHtml(){
 }
 function renderNotices(){
   const out = [];
+  if (S.got.p && S.got.s && !S.failed && S.services.length && S.mode !== undefined){
+    const last = S.lastRefresh || Math.max(0, ...S.services.map(s => num(s.autoAt)));
+    const days = last ? Math.floor((Date.now() - last) / 864e5) : null;
+    if (days === null || days >= 7) out.push(`<div class="notice"><span>${days === null ? '아직 갱신한 적이 없어요.' : `마지막 갱신 <b>${days}일 전</b>이에요.`} Claude에게 <b>"장부 갱신해 줘"</b>라고 하면 새 레포·서비스와 이번 달 비용을 한 번에 확인해요.</span></div>`);
+  }
   if (S.newVer) out.push(`<div class="notice"><span><b>새 버전 ${esc(S.newVer)}</b>이 있어요 (지금 ${APP_VERSION}). Claude에게 <b>"장부 업데이트해 줘"</b>라고 하면 데이터는 그대로 두고 코드만 바꿔요. <a href="https://github.com/${UPSTREAM}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">바뀐 점 ↗</a></span><button class="btn ghost" data-act="skipVer">닫기</button></div>`);
   if (S.local) out.push(`<div class="notice"><span>이 컴퓨터의 <code>data/ledger.json</code>을 열고 있어요. 저장하면 파일에 바로 써요. GitHub에 올리려면 커밋·푸시하거나 Claude에게 "장부 올려 줘"라고 하세요.</span></div>`);
   else if (S.mode === 'gh' && (!GH.token || S.ghErr)) out.push(ghConnectHtml());
@@ -1151,7 +1156,7 @@ function lsGet(k){ try { return localStorage.getItem(k) || ''; } catch { return 
 function lsSet(k, v){ try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} }
 const GH = {repo: lsGet('ledger.repo'), path: 'data/ledger.json', token: lsGet('ledger.token'), login: lsGet('ledger.login')};
 // 이 페이지의 버전과 새 버전을 확인할 템플릿 레포 (scripts/bump.mjs 가 같이 올린다)
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const UPSTREAM = 'fkal829/service-cost-ledger-template';
 const verGt = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++){ if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
 async function checkUpdate(){
@@ -1260,6 +1265,7 @@ checkUpdate();
   }, fail);
   db.doc('settings/main').onSnapshot(snap => {
     if (S.mode !== 'gh' && snap.data()?.mirror){ S.mirror = String(snap.data().mirror); S.canWrite = false; render(); }
+    S.lastRefresh = num(snap.data()?.lastRefresh) || 0;
     const fx = num(snap.data()?.fx); if (fx > 0){ S.fx = fx; if (document.activeElement !== $('#fxInput')) $('#fxInput').value = fx; render(); }
   }, () => {});
 })();
