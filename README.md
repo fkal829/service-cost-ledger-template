@@ -9,19 +9,23 @@
 
 데이터는 **내 GitHub 비공개 레포**에만 저장돼요. 특정 Claude 계정이나 서버에 묶이지 않아요.
 
-## 시작하기 (5분 + Claude가 정리하는 시간)
+## 시작하기
 
-필요한 것: GitHub 계정, [Claude Code](https://claude.com/claude-code)(Claude 앱의 Code 탭이나 터미널), [GitHub CLI](https://cli.github.com)(`gh auth login`으로 로그인), Node.js 18 이상.
+**준비** (처음 한 번): [Claude Code](https://claude.com/claude-code)(Claude 앱의 Code 탭이나 터미널), [GitHub CLI](https://cli.github.com) 설치 후 터미널에서 `gh auth login`, [Node.js](https://nodejs.org) 18 이상.
 
-1. 이 페이지 위의 **Use this template → Create a new repository**
-   - 이름: `service-cost-ledger`, **Private**를 꼭 고르세요.
-2. 만든 레포를 내 컴퓨터로 받아 Claude Code로 열어요.
-   ```bash
-   gh repo clone <내계정>/service-cost-ledger
-   ```
-3. Claude에게 말해요: **"장부 세팅해 줘"**
+**Claude Code에 이 한 문장을 붙여 넣으세요** (어느 폴더에서든):
 
-Claude가 내 GitHub 레포들을 읽고 프로젝트와 외부 서비스를 정리해 장부를 채운 뒤, 보는 방법과 자동 갱신을 안내해요. 어느 계정·조직을 넣을지 같은 것만 물어봐요.
+```
+fkal829/service-cost-ledger-template 템플릿으로 내 비용 장부를 만들어 줘. gh repo create service-cost-ledger --private --template fkal829/service-cost-ledger-template --clone 으로 만들고, 그 폴더의 .claude/skills/ledger-setup/SKILL.md 대로 세팅해 줘.
+```
+
+Claude가 알아서 해요:
+1. 내 GitHub에 **비공개** 레포 `service-cost-ledger`를 만들어 받아요.
+2. 내 레포들을 읽어 프로젝트와 외부 서비스를 정리해 장부를 채워요. 어느 계정·조직을 넣을지만 물어봐요.
+3. 매주 레포 스캔, 평일 비용 갱신을 Claude 앱 예약 작업으로 켜 줘요 (토큰 필요 없음).
+4. 보는 방법을 알려 줘요.
+
+이미 장부 레포가 있으면, 그 폴더를 Claude Code로 열고 "장부 세팅해 줘"라고만 하면 돼요.
 
 ## 보는 법
 
@@ -47,13 +51,14 @@ Claude가 내 GitHub 레포들을 읽고 프로젝트와 외부 서비스를 정
 
 ## 자동 갱신
 
-| 무엇 | 누가 | 언제 | 필요한 것 |
-|---|---|---|---|
-| 새 프로젝트·서비스 연결 | GitHub Actions `레포 스캔` | 매주 월요일 | 레포 시크릿 `LEDGER_SCAN_TOKEN` (없으면 건너뜀) |
-| 비용·크레딧 | Claude 앱 예약 작업 | 평일 아침 | Claude 앱이 켜진 컴퓨터, Chrome에 각 서비스 로그인 |
-| 내 주소로 페이지 배포 (선택) | GitHub Actions `장부 페이지 배포` | `docs/`가 바뀔 때 | 유료 계정, 레포 변수 `LEDGER_PAGES=on` |
+| 무엇 | 언제 | 어떻게 |
+|---|---|---|
+| 새 프로젝트·서비스 찾기 | 매주 월요일 | Claude 앱 예약 작업 (GitHub CLI 로그인 사용, 토큰 없음) |
+| 비용·크레딧 | 평일 아침 | Claude 앱 예약 작업이 Chrome에서 청구 화면을 읽음 |
 
-`LEDGER_SCAN_TOKEN`: 레포 **Settings → Secrets and variables → Actions → New repository secret**. 내 레포와 회사 조직 레포를 한 번에 읽으려면 [classic token](https://github.com/settings/tokens/new?scopes=repo&description=cost-ledger-scan)(`repo` 범위)이 가장 간단해요. 넣기 싫으면 가끔 "장부 정리해 줘"라고 하면 같은 스캔을 토큰 없이 돌려요.
+둘 다 Claude 앱이 켜진 컴퓨터에서 돌아요. 꺼져 있으면 다음에 켤 때 돌아요.
+
+(고급) 컴퓨터가 꺼져 있어도 매주 스캔을 돌리려면 GitHub Actions `레포 스캔`을 쓸 수 있어요. 레포 **Settings → Secrets and variables → Actions**에 `LEDGER_SCAN_TOKEN`([classic token](https://github.com/settings/tokens/new?scopes=repo&description=cost-ledger-scan), `repo` 범위)을 넣으면 돼요.
 
 ## 안전
 

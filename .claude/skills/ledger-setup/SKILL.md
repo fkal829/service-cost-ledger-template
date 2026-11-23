@@ -5,7 +5,7 @@ description: 서비스 비용 장부를 처음 세팅한다. 사용자의 GitHub
 
 # 장부 처음 세팅
 
-사용자는 이 템플릿 레포를 받아 Claude Code로 연 상태다. 한국어로, 짧게 진행 상황을 알리며 한다. 사용자가 결정할 것만 묻고 나머지는 알아서 한다.
+한국어로, 짧게 진행 상황을 알리며 한다. 사용자가 결정할 것만 묻고 나머지는 알아서 한다. 사용자가 할 일은 "장부 세팅해 줘" 한마디와, 꼭 필요한 확인 몇 가지뿐이어야 한다.
 
 ## 원칙
 - 토큰·비밀번호·키를 사용자에게 채팅으로 받지 않는다. GitHub 접근은 `gh` CLI 로그인을 쓴다.
@@ -17,6 +17,14 @@ description: 서비스 비용 장부를 처음 세팅한다. 사용자의 GitHub
 - `gh auth status`. 로그인 안 돼 있으면 사용자에게 터미널에서 `gh auth login`(브라우저 로그인)을 하라고 안내하고 기다린다. `gh`가 없으면 설치 방법(https://cli.github.com)을 안내한다.
 - `node -v` (18 이상).
 - 이 폴더가 git 레포인지, `origin`이 있는지 본다.
+
+## 1-1. 장부 레포 만들기 (아직 없을 때)
+- 지금 폴더가 장부 레포(`data/ledger.json`과 `.claude/skills/ledger-setup`이 있음)가 아니면, 사용자 GitHub에 이미 장부 레포가 있는지 본다: `gh repo view <login>/service-cost-ledger`.
+  - 있으면: 그걸 받아(`gh repo clone <login>/service-cost-ledger ~/service-cost-ledger`) 그 폴더에서 이어 한다.
+  - 없으면: "GitHub에 비공개 레포 `<login>/service-cost-ledger`를 만들고 `~/service-cost-ledger`에 받을게요"라고 한 번 확인받고
+    `cd ~ && gh repo create service-cost-ledger --private --template fkal829/service-cost-ledger-template --clone`
+    (템플릿 주소는 `data/upstream.json`이 있으면 그 repo). 반드시 `--private`.
+  - 이후 모든 명령은 그 폴더에서 한다. 템플릿 레포 자체(`is_template`)에서는 세팅하지 않는다.
 
 ## 2. 무엇을 훑을지 묻기
 - `gh api user -q .login`과 `gh api user/orgs -q '.[].login'`로 계정과 조직을 보여 주고, **어느 것을 장부에 넣을지**와 **회사(업무) 조직이 어느 것인지** 묻는다.
@@ -39,7 +47,7 @@ description: 서비스 비용 장부를 처음 세팅한다. 사용자의 GitHub
 - 결과를 표로 보여 준다: 프로젝트 수, 서비스 수(유료 추정/무료), 확인이 필요한 것.
 
 ## 4. GitHub에 올리기
-- `origin`이 없으면 사용자에게 확인을 받고 `gh repo create <login>/service-cost-ledger --private --source . --push`. 있으면 커밋 후 push.
+- 커밋 후 push. (`origin`이 없는 예외적인 경우에만 사용자 확인 후 `gh repo create <login>/service-cost-ledger --private --source . --push`.)
 - 커밋 메시지: "장부: 처음 세팅".
 
 ## 5. 보는 방법 안내 (선택지를 짧게)
@@ -47,9 +55,14 @@ description: 서비스 비용 장부를 처음 세팅한다. 사용자의 GitHub
 - **휴대폰·다른 기기에서 (기본)**: 공용 페이지 `https://<템플릿 소유자>.github.io/<템플릿 레포 이름>/` (`data/upstream.json`의 repo로 만든다. 지금은 https://fkal829.github.io/service-cost-ledger-template/ ). 페이지의 '토큰 만드는 법'대로 **자기 장부 레포 하나만 고른** 토큰을 한 번 넣으면 자기 장부가 보인다. 페이지에는 데이터가 없고, 데이터는 브라우저가 자기 레포에서 바로 읽는다. 토큰은 그 브라우저에만 남는다.
 - **자기 주소로 따로 배포하고 싶으면 (선택)**: GitHub 유료 계정이어야 비공개 레포로 Pages를 만들 수 있다. 사용자 확인 후 `gh api -X POST repos/<repo>/pages -f build_type=workflow`, `gh variable set LEDGER_PAGES -b on`, `gh workflow run pages.yml`. 무료 계정이면 공용 페이지를 쓰라고 안내한다.
 
-## 6. 자동 갱신 (원하는 것만)
-- **레포 스캔 (매주, Claude 없이)**: GitHub Actions가 돈다. 레포 Settings → Secrets → Actions에 `LEDGER_SCAN_TOKEN`(레포 읽기 토큰)을 사용자가 직접 넣어야 한다고 안내한다. 넣기 싫으면 "가끔 Claude에게 '장부 정리해 줘'라고 하면 같은 스캔을 토큰 없이 돌린다"고 알려 준다.
+## 6. 자동 갱신 (한 번 확인받고 켠다)
+예약 작업 도구(scheduled-tasks, Claude 앱)가 있으면 아래 두 작업을 사용자에게 한 번에 보여 주고 확인받아 만든다. 둘 다 토큰이 필요 없다 (GitHub CLI 로그인과 Chrome 로그인을 쓴다). 만든 뒤 각 작업의 "지금 실행"을 한 번 눌러 권한을 허용해 두라고 안내한다.
+- **레포 스캔 — 매주 월요일 09:00** (cron `0 9 * * 1`), 이름 "비용 장부 레포 스캔": "장부 레포 <절대경로>에서 .claude/skills/ledger-tidy/SKILL.md 의 '예약 실행' 절대로 한다."
+- **비용 갱신 — 평일 09:30** (cron `30 9 * * 1-5`), 이름 "비용 장부 비용 갱신": "장부 레포 <절대경로>에서 .claude/skills/ledger-refresh/SKILL.md 대로 한다." 비용 출처(`data/cost-sources.json`)가 비어 있으면 이 작업은 만들지 말고, 아래처럼 출처부터 정한다.
+- 비용 출처: 장부의 유료 서비스를 보고 사용자에게 어떤 결제 계정·콘솔을 쓰는지 물어 kind별로 `data/cost-sources.json`에 적는다 (형식은 ledger-refresh 스킬 참고). 결제 화면을 읽으려면 그 컴퓨터의 Chrome에 Claude in Chrome 확장이 있고 각 서비스에 로그인돼 있어야 한다고 알린다.
+- 예약 작업 도구가 없으면(터미널 Claude Code 등): "가끔 '장부 정리해 줘', '장부 갱신해 줘'라고 하면 같은 일을 해요"라고 안내한다.
+- (고급, 선택) 컴퓨터가 꺼져 있어도 매주 스캔을 돌리고 싶으면 GitHub Actions `레포 스캔`을 쓸 수 있다. 이때만 레포 시크릿 `LEDGER_SCAN_TOKEN`이 필요하다. 사용자가 원할 때만 안내한다.
 - **비용 (평일 아침)**: 결제 화면을 읽는 거라 Claude 앱이 켜진 컴퓨터가 필요하다. `data/cost-sources.json`에 읽을 곳을 정리한다 (장부의 유료 서비스를 보고 사용자에게 어떤 결제 계정·콘솔을 쓰는지 물어 kind별로 적는다. 형식은 ledger-refresh 스킬 참고). 예약 작업 도구(scheduled-tasks)가 있으면 사용자 확인 후 "평일 09:00, 이 레포에서 ledger-refresh 스킬 실행" 작업을 만들고, "지금 실행"을 한 번 눌러 Chrome 권한을 허용해 두라고 안내한다.
 
 ## 7. 마무리 보고
-- 장부 주소(로컬·페이지), 프로젝트·서비스 수, 확인이 필요한 항목, 켠 자동화와 남은 할 일(시크릿, 토큰, Chrome 로그인)을 짧게.
+- 장부 주소(로컬·공용 페이지), 프로젝트·서비스 수, 확인이 필요한 항목, 켠 자동화와 남은 할 일(휴대폰용 토큰, Chrome 로그인, "지금 실행")을 짧게.
