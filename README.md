@@ -11,16 +11,18 @@
 
 - **데이터를 저장할 레포가 하나 필요해요.** 내 GitHub에 비공개 레포(`service-cost-ledger`)를 하나 만들어 거기에 저장해요. 따로 서버나 DB가 없고, 특정 Claude 계정에 묶이지도 않아요.
 - **화면은 공용 대시보드**에서 봐요. 대시보드에는 데이터가 없고, 내 브라우저가 내 레포에서 바로 읽어 와요.
-- **채우고 갱신하는 건 Claude**가 해요. "세팅해 줘", "갱신해 줘"처럼 짧게 말하면 돼요.
+- **채우고 갱신하는 건 Claude**가 해요. "초기 세팅", "갱신"처럼 짧게 말하면 돼요.
 
 ## 시작하기
 
 **준비** (처음 한 번): [Claude Code](https://claude.com/claude-code)(Claude 앱의 Code 탭이나 터미널), [GitHub CLI](https://cli.github.com) 설치 후 터미널에서 `gh auth login`, [Node.js](https://nodejs.org) 18 이상.
 
-**Claude Code에 이 한 문장을 붙여 넣으세요** (어느 폴더에서든):
+**Claude Code에 아래를 그대로 붙여 넣으세요** (어느 폴더에서든):
 
 ```
-fkal829/service-cost-ledger-template 템플릿으로 내 서비스 비용 대시보드를 만들어 줘. gh repo create service-cost-ledger --private --template fkal829/service-cost-ledger-template --clone 으로 만들고, 그 폴더의 .claude/skills/ledger-setup/SKILL.md 대로 세팅해 줘.
+초기 세팅: 템플릿 fkal829/service-cost-ledger-template
+1) gh repo create service-cost-ledger --private --template fkal829/service-cost-ledger-template --clone
+2) 그 폴더의 .claude/skills/ledger-setup/SKILL.md 대로 진행
 ```
 
 Claude가 알아서 해요:
@@ -29,7 +31,7 @@ Claude가 알아서 해요:
 3. 비용을 어디서 읽을지(GCP, Claude Console 등) 물어보고 정해 둬요.
 4. 보는 방법을 알려 줘요.
 
-이미 데이터 레포가 있으면, 그 폴더를 Claude Code로 열고 "세팅해 줘"라고만 하면 돼요. 이후로는 그 폴더에서 "갱신해 줘", "정리해 줘"처럼 짧게 말하면 돼요.
+이미 데이터 레포가 있으면, 그 폴더를 Claude Code로 열고 "초기 세팅"이라고만 하면 돼요. 이후로는 그 폴더에서 "갱신", "정리"처럼 짧게 말하면 돼요.
 
 ## 보는 법
 
@@ -46,16 +48,16 @@ Claude가 알아서 해요:
 
 | 말하기 | 하는 일 |
 |---|---|
-| "세팅해 줘" | 처음 한 번. 데이터 레포를 만들고, 내 레포들을 읽어 채우고, 보는 법을 안내 |
-| "갱신해 줘" | 새 레포·서비스 확인 + Chrome에서 이미 로그인된 청구 화면(GCP, Claude Console, Vercel, OpenAI…)을 **읽기만** 해서 비용·크레딧 갱신 |
-| "정리해 줘" | 갱신 때 찾은 새 레포·서비스의 설명을 코드를 읽고 다듬음, 애매한 것 물어봄 |
-| "새 버전 받아 줘" | 이 템플릿의 새 버전 코드를 받음 (데이터는 그대로). 새 버전이 나오면 대시보드 위에 알림이 떠요 |
+| "초기 세팅" | 처음 한 번. 데이터 레포를 만들고, 내 레포들을 읽어 채우고, 보는 법을 안내 |
+| "갱신" | 새 레포·서비스 확인 + Chrome에서 이미 로그인된 청구 화면(GCP, Claude Console, Vercel, OpenAI…)을 **읽기만** 해서 비용·크레딧 갱신 |
+| "정리" | 갱신 때 찾은 새 레포·서비스의 설명을 코드를 읽고 다듬음, 애매한 것 물어봄 |
+| "버전 업데이트" | 이 템플릿의 새 버전 코드를 받음 (데이터는 그대로). 새 버전이 나오면 대시보드 위에 알림이 떠요 |
 
 어느 Claude 계정이든 이 레포를 열면 같은 스킬(`.claude/skills/`)을 써요.
 
 ## 갱신
 
-Claude에게 **"갱신해 줘"** 한마디면 두 가지를 한 번에 해요. 정해진 시간에 혼자 도는 작업은 없어요.
+Claude에게 **"갱신"** 한마디면 두 가지를 한 번에 해요. 정해진 시간에 혼자 도는 작업은 없어요.
 1. 내 GitHub 레포를 다시 훑어 새 프로젝트·새 서비스를 찾아요 (GitHub CLI 로그인을 써서 토큰 필요 없음).
 2. Chrome에서 이미 로그인된 청구 화면을 읽기만 해서 비용·크레딧을 적어요.
 
