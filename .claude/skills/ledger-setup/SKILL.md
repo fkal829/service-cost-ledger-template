@@ -33,7 +33,7 @@ description: 서비스 비용 대시보드를 처음 세팅한다. 데이터를 
 ## 3. 데이터 만들기 (가장 중요)
 `gh repo list <owner> --limit 200 --json nameWithOwner,description,isFork,isArchived,pushedAt,homepageUrl`로 레포 목록을 받는다. 포크는 사용자가 원할 때만 넣는다.
 
-레포마다 (많으면 Agent로 나눠 병렬로) 얕게 받아(`gh repo clone <repo> <임시폴더> -- --depth 1`) 다음을 읽는다:
+레포마다 (많으면 하위 에이전트 등으로 나눠 병렬로) 얕게 받아(`gh repo clone <repo> <임시폴더> -- --depth 1`) 다음을 읽는다:
 - README, `package.json`/`requirements*.txt`/`pyproject.toml`, `.env.example`류, 배포 설정(`vercel.json`, `firebase.json`, `render.yaml`, `wrangler.toml`, `Dockerfile`, `.github/workflows/`), 코드 속 `process.env.X`/`os.environ`/외부 API 주소.
 - 그 레포가 **무엇을 하는지 한 줄**, **어디서 실행되는지**, 그리고 쓰는 **외부 서비스마다 무엇에 쓰는지**를 정리한다.
 - 임시 폴더는 끝나면 지운다.
@@ -58,7 +58,7 @@ description: 서비스 비용 대시보드를 처음 세팅한다. 데이터를 
 ## 6. 갱신 방법 정하기
 정해진 시간에 혼자 도는 작업은 만들지 않는다. 갱신은 사용자가 "갱신"이라고 할 때 레포 확인과 비용 확인을 한 번에 한다 (ledger-refresh). 대시보드는 오래 갱신하지 않으면 알림을 띄운다.
 - 비용 출처: 등록된 유료 서비스를 보고 사용자에게 어떤 결제 계정·콘솔을 쓰는지 물어 kind별로 `data/cost-sources.json`에 적는다 (형식은 ledger-refresh 스킬 참고). 사용자가 지금 정하기 싫으면 비워 두고 "처음 '갱신' 할 때 정해요"라고 한다.
-- 결제 화면을 읽으려면 그 컴퓨터의 Chrome에 Claude in Chrome 확장이 있고 각 서비스에 로그인돼 있어야 한다고 알린다.
+- 결제 화면을 자동으로 읽으려면 로그인된 브라우저를 다루는 도구가 있어야 한다고 알린다 (Claude Code: Chrome에 Claude in Chrome 확장 + 각 서비스 로그인). 없으면 갱신 때 숫자를 물어보고 받아 적는다.
 - 마지막으로 `node scripts/merge.mjs settings main '{"lastRefresh":<now>}'` 후 커밋·푸시한다.
 
 ## 7. 마무리 보고

@@ -2,7 +2,7 @@
 
 내 프로젝트들이 쓰는 외부 서비스와 비용을 한눈에.
 
-## 시작 — Claude Code에 그대로 붙여 넣기
+## 시작 — Claude Code나 Codex에 그대로 붙여 넣기
 
 ```
 초기 세팅: 템플릿 fkal829/service-cost-ledger-template
@@ -11,7 +11,7 @@
 ```
 
 > [!TIP]
-> **준비물** [Claude Code](https://claude.com/claude-code) · [GitHub CLI](https://cli.github.com) (`gh auth login`) · [Node.js](https://nodejs.org) 18+<br>
+> **준비물** [Claude Code](https://claude.com/claude-code) 또는 [Codex](https://github.com/openai/codex) · [GitHub CLI](https://cli.github.com) (`gh auth login`) · [Node.js](https://nodejs.org) 18+<br>
 > **그다음엔** `갱신` · `정리` · `버전 업데이트` 한 단어면 돼요.<br>
 > **보기** [fkal829.github.io/service-cost-ledger-template](https://fkal829.github.io/service-cost-ledger-template/)
 
@@ -36,19 +36,19 @@
 <sub>화면은 모두 예시 데이터예요.</sub>
 
 ### 어떻게 동작하나요
-- **데이터를 저장할 레포가 하나 필요해요.** 내 GitHub에 비공개 레포(`service-cost-ledger`)를 하나 만들어 거기에 저장해요. 따로 서버나 DB가 없고, 특정 Claude 계정에 묶이지도 않아요.
+- **데이터를 저장할 레포가 하나 필요해요.** 내 GitHub에 비공개 레포(`service-cost-ledger`)를 하나 만들어 거기에 저장해요. 따로 서버나 DB가 없고, 특정 AI 계정에 묶이지도 않아요.
 - **화면은 공용 대시보드**에서 봐요. 대시보드에는 데이터가 없고, 내 브라우저가 내 레포에서 바로 읽어 와요.
-- **채우고 갱신하는 건 Claude**가 해요.
+- **채우고 갱신하는 건 AI**(Claude Code나 Codex)가 해요.
 
-### 초기 세팅 때 Claude가 하는 일
+### 초기 세팅 때 AI가 하는 일
 1. 데이터를 저장할 **비공개** 레포 `service-cost-ledger`를 내 GitHub에 만들어 받아요.
 2. 내 레포들을 읽어 프로젝트와 외부 서비스를 정리해 채워요. 어느 계정·조직을 넣을지만 물어봐요.
 3. 비용을 어디서 읽을지(GCP, Claude Console 등) 물어보고 정해 둬요.
 4. 보는 방법을 알려 줘요.
 
-이미 데이터 레포가 있으면, 그 폴더를 Claude Code로 열고 `초기 세팅`이라고만 하면 돼요.
+이미 데이터 레포가 있으면, 그 폴더를 Claude Code나 Codex로 열고 `초기 세팅`이라고만 하면 돼요.
 
-### Claude에게 쓰는 말
+### AI에게 쓰는 말
 | 말 | 하는 일 |
 |---|---|
 | `초기 세팅` | 처음 한 번. 데이터 레포를 만들고, 내 레포들을 읽어 채우고, 보는 법을 안내 |
@@ -56,7 +56,14 @@
 | `정리` | 갱신 때 찾은 새 레포·서비스의 설명을 코드를 읽고 다듬음, 애매한 것 물어봄 |
 | `버전 업데이트` | 이 템플릿의 새 버전 코드를 받음 (데이터는 그대로). 새 버전이 나오면 대시보드 위에 알림이 떠요 |
 
-데이터 레포 폴더를 열면 어느 Claude 계정이든 같은 스킬(`.claude/skills/`)을 써요. 정해진 시간에 혼자 도는 작업은 없어요. 오래 갱신하지 않으면 대시보드 위에 "마지막 갱신 ○일 전" 알림이 떠요. 크레딧 만료 알림은 날짜로 계산해서 갱신하지 않아도 떠요.
+데이터 레포 폴더를 열면 Claude Code든 Codex든 같은 절차 문서(`.claude/skills/`, 안내는 `AGENTS.md`)를 따라요. 정해진 시간에 혼자 도는 작업은 없어요. 오래 갱신하지 않으면 대시보드 위에 "마지막 갱신 ○일 전" 알림이 떠요. 크레딧 만료 알림은 날짜로 계산해서 갱신하지 않아도 떠요.
+
+### Claude Code와 Codex 차이
+| | Claude Code | Codex |
+|---|---|---|
+| 초기 세팅, 정리, 버전 업데이트 | ✅ | ✅ |
+| 갱신: 새 레포·서비스 확인 | ✅ | ✅ |
+| 갱신: 결제 화면 자동으로 읽기 | ✅ (Chrome에 Claude in Chrome 확장) | 브라우저 도구가 없으면 숫자를 물어보고 받아 적어요 |
 
 ### 보는 법
 | 어디서 | 어떻게 | 토큰 |

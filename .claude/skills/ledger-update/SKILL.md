@@ -14,7 +14,7 @@ description: 서비스 비용 대시보드의 코드(페이지, 스크립트, �
 3. 사용자가 직접 고친 코드 파일이 덮어써질 수 있다. `changed` 중 사용자가 고쳤을 법한 파일(예: `docs/index.html`, 스킬 파일)이 있으면 `git diff --no-index`나 `git diff HEAD FETCH_HEAD -- <파일>`로 차이를 보여 주고, 사용자가 원하면 그 파일은 빼고 적용한다 (빼려면 적용 뒤 `git checkout HEAD -- <파일>`).
 4. 사용자 확인을 받고 `node scripts/update-from-template.mjs --apply`. 결과에 `"rerun": true`가 있으면 같은 명령을 한 번 더 실행한다 (스크립트 자신이 새 버전으로 바뀐 경우).
 5. 확인: `node --check scripts/*.mjs`, JSON 파일 파싱(`node -e "JSON.parse(require('fs').readFileSync('data/signatures.json','utf8'))"`).
-6. 커밋·푸시: `git add -A docs scripts .github .claude CLAUDE.md VERSION CHANGELOG.md .ledger-removed data/signatures.json data/upstream.json && git commit -m "데이터: 템플릿 <versionTemplate>로 업데이트" && git push`. GitHub Pages를 쓰면 페이지 배포 Actions가 자동으로 돈다.
+6. 커밋·푸시: `git add -A docs scripts .github .claude CLAUDE.md AGENTS.md VERSION CHANGELOG.md .ledger-removed data/signatures.json data/upstream.json && git commit -m "데이터: 템플릿 <versionTemplate>로 업데이트" && git push`. GitHub Pages를 쓰면 페이지 배포 Actions가 자동으로 돈다.
 7. 보고: 새 버전, 바뀐 것 요약, 빼고 적용한 파일, 사용자가 할 일(있다면).
 
 ## 지킬 것

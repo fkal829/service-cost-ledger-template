@@ -10,7 +10,7 @@ const ROOT = new URL('..', import.meta.url).pathname;
 const APPLY = process.argv.includes('--apply');
 const git = (...a) => execFileSync('git', ['-C', ROOT, ...a], { encoding: 'utf8', maxBuffer: 64 << 20 });
 // 템플릿에서 받아 올 코드 경로. README.md는 각자 고쳐 쓰는 경우가 많아 받지 않는다.
-const PATHS = ['docs', 'scripts', '.github/workflows', '.claude/skills', 'CLAUDE.md', 'VERSION', 'CHANGELOG.md', '.ledger-removed'];
+const PATHS = ['docs', 'scripts', '.github/workflows', '.claude/skills', 'CLAUDE.md', 'AGENTS.md', 'VERSION', 'CHANGELOG.md', '.ledger-removed'];
 
 const upFile = join(ROOT, 'data/upstream.json');
 const up = existsSync(upFile) ? JSON.parse(readFileSync(upFile, 'utf8')) : { repo: 'fkal829/service-cost-ledger-template', branch: 'main' };
