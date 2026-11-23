@@ -50,10 +50,10 @@ description: 서비스 비용 대시보드를 처음 세팅한다. 데이터를 
 - 커밋 후 push. (`origin`이 없는 예외적인 경우에만 사용자 확인 후 `gh repo create <login>/service-cost-ledger --private --source . --push`.)
 - 커밋 메시지: "데이터: 처음 세팅".
 
-## 5. 보는 방법 안내 (선택지를 짧게)
-- **이 컴퓨터에서, 토큰 없이**: `node scripts/serve.mjs` → http://localhost:4321. 저장하면 파일에 바로 써진다.
-- **휴대폰·다른 기기에서 (기본)**: 공용 페이지 `https://<템플릿 소유자>.github.io/<템플릿 레포 이름>/` (`data/upstream.json`의 repo로 만든다. 지금은 https://fkal829.github.io/service-cost-ledger-template/ ). 페이지의 '토큰 만드는 법'대로 **자기 데이터 레포 하나만 고른** 토큰을 한 번 넣으면 자기 데이터가 보인다. 페이지에는 데이터가 없고, 데이터는 브라우저가 자기 레포에서 바로 읽는다. 토큰은 그 브라우저에만 남는다.
-- **자기 주소로 따로 배포하고 싶으면 (선택)**: GitHub 유료 계정이어야 비공개 레포로 Pages를 만들 수 있다. 사용자 확인 후 `gh api -X POST repos/<repo>/pages -f build_type=workflow`, `gh variable set LEDGER_PAGES -b on`, `gh workflow run pages.yml`. 무료 계정이면 공용 페이지를 쓰라고 안내한다.
+## 5. 보는 방법 안내
+- 공용 대시보드 `https://<템플릿 소유자>.github.io/<템플릿 레포 이름>/` 하나만 안내한다 (`data/upstream.json`의 repo로 만든다. 지금은 https://fkal829.github.io/service-cost-ledger-template/ ). 컴퓨터·휴대폰 모두 같은 주소다. 페이지의 '토큰 만드는 법'대로 **자기 데이터 레포 하나만 고른** 토큰을 한 번 넣으면 자기 데이터가 보인다. 페이지에는 데이터가 없고, 데이터는 브라우저가 자기 레포에서 바로 읽는다. 토큰은 그 브라우저에만 남는다.
+- (사용자가 토큰 없이 보고 싶다고 할 때만) `node scripts/serve.mjs` → http://localhost:4321 로 이 컴퓨터에서 열 수 있다고 알려 준다.
+- (사용자가 자기 주소를 원할 때만) GitHub 유료 계정이면 `gh api -X POST repos/<repo>/pages -f build_type=workflow`, `gh variable set LEDGER_PAGES -b on`, `gh workflow run pages.yml`.
 
 ## 6. 비용 읽을 곳과 로그인 목록 (그 사람에게 맞게)
 정해진 시간에 혼자 도는 작업은 만들지 않는다. 갱신은 사용자가 "갱신"이라고 할 때 레포 확인과 비용 확인을 한 번에 한다 (ledger-refresh). 대시보드는 오래 갱신하지 않으면 알림을 띄운다.
@@ -80,4 +80,4 @@ description: 서비스 비용 대시보드를 처음 세팅한다. 데이터를 
 6. 마지막으로 `node scripts/merge.mjs settings main '{"lastRefresh":<now>}'` 후 커밋·푸시한다.
 
 ## 7. 마무리 보고
-- 대시보드 주소(로컬·공용 페이지), 프로젝트·서비스 수, 확인이 필요한 항목, 남은 할 일(휴대폰용 토큰, 위 로그인 체크리스트)과 "갱신은 '갱신'"를 짧게.
+- 대시보드 주소(공용 대시보드), 프로젝트·서비스 수, 확인이 필요한 항목, 남은 할 일(휴대폰용 토큰, 위 로그인 체크리스트)과 "갱신은 '갱신'"를 짧게.

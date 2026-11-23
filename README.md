@@ -68,14 +68,9 @@
 결제 사이트 로그인이 풀려 있으면 그 곳만 건너뛰고, 대시보드 "확인 필요"에 **결제 화면 로그인 필요**와 로그인할 주소가 떠요.
 
 ### 보는 법
-| 어디서 | 어떻게 | 토큰 |
-|---|---|---|
-| 휴대폰·다른 기기 | 공용 대시보드 https://fkal829.github.io/service-cost-ledger-template/ | 처음 한 번 넣기 (페이지에 만드는 법이 있어요) |
-| 이 컴퓨터 | `node scripts/serve.mjs` → http://localhost:4321 | 필요 없음 |
+공용 대시보드 https://fkal829.github.io/service-cost-ledger-template/ 에서 봐요. 컴퓨터든 휴대폰이든 같은 주소예요. 처음 한 번 GitHub 토큰을 넣으면 돼요 (페이지에 만드는 법이 있어요).
 
 공용 대시보드에는 데이터가 없어요. 페이지를 연 사람의 브라우저가 그 사람 토큰으로 **그 사람 레포**에서 바로 읽어요. 그래서 같은 주소를 열어도 사람마다 자기 데이터가 보이고, 다른 사람(페이지 만든 사람 포함)에게 데이터가 가지 않아요. 토큰은 **데이터 레포 하나만** 고를 수 있게 만드세요.
-
-자기 주소로 따로 배포하고 싶으면(GitHub 유료 계정 필요): 레포 Settings → Pages에서 Source를 GitHub Actions로 하고, 레포 변수 `LEDGER_PAGES`를 `on`으로 두면 `대시보드 배포` Actions가 돌아요.
 
 ### 안전
 - 키·토큰·비밀번호는 데이터에 적지 않아요. 레포를 읽을 때도 환경변수 **이름**만 보고 `.env` 같은 실제 값 파일은 열지 않아요.
@@ -84,7 +79,7 @@
 
 ### 파일
 - `data/ledger.json` 데이터 · `data/signatures.json` 서비스 알아보는 규칙 · `data/scan-config.json` 스캔 대상 · `data/cost-sources.json` 비용 읽을 곳
-- `docs/index.html` 대시보드 · `scripts/` 레포 확인·데이터 고치기·로컬 서버·업데이트 · `.claude/skills/` Claude 스킬
+- `docs/index.html` 대시보드 · `scripts/` 레포 확인·데이터 고치기·업데이트 · `.claude/skills/` 절차 문서 · `AGENTS.md` AI용 안내
 
 ### 라이선스
 [MIT](LICENSE) — 자유롭게 쓰고 고치고 나눠도 돼요. 저작권 표시만 남겨 주세요.
