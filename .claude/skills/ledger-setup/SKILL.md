@@ -44,7 +44,8 @@ description: 서비스 비용 장부를 처음 세팅한다. 사용자의 GitHub
 
 ## 5. 보는 방법 안내 (선택지를 짧게)
 - **이 컴퓨터에서, 토큰 없이**: `node scripts/serve.mjs` → http://localhost:4321. 저장하면 파일에 바로 써진다.
-- **휴대폰·다른 기기에서**: 레포 Settings → Pages를 켜려면 사용자 확인을 받고 `gh api -X POST repos/<repo>/pages -f build_type=workflow`, 그다음 `gh workflow run pages.yml`. 페이지(`https://<login>.github.io/service-cost-ledger/`)에서 '토큰 만드는 법'대로 토큰을 한 번 넣는다. (공개 페이지에는 데이터가 없고, 토큰은 그 브라우저에만 남는다.)
+- **휴대폰·다른 기기에서 (기본)**: 공용 페이지 `https://<템플릿 소유자>.github.io/<템플릿 레포 이름>/` (`data/upstream.json`의 repo로 만든다. 지금은 https://fkal829.github.io/service-cost-ledger-template/ ). 페이지의 '토큰 만드는 법'대로 **자기 장부 레포 하나만 고른** 토큰을 한 번 넣으면 자기 장부가 보인다. 페이지에는 데이터가 없고, 데이터는 브라우저가 자기 레포에서 바로 읽는다. 토큰은 그 브라우저에만 남는다.
+- **자기 주소로 따로 배포하고 싶으면 (선택)**: GitHub 유료 계정이어야 비공개 레포로 Pages를 만들 수 있다. 사용자 확인 후 `gh api -X POST repos/<repo>/pages -f build_type=workflow`, `gh variable set LEDGER_PAGES -b on`, `gh workflow run pages.yml`. 무료 계정이면 공용 페이지를 쓰라고 안내한다.
 
 ## 6. 자동 갱신 (원하는 것만)
 - **레포 스캔 (매주, Claude 없이)**: GitHub Actions가 돈다. 레포 Settings → Secrets → Actions에 `LEDGER_SCAN_TOKEN`(레포 읽기 토큰)을 사용자가 직접 넣어야 한다고 안내한다. 넣기 싫으면 "가끔 Claude에게 '장부 정리해 줘'라고 하면 같은 스캔을 토큰 없이 돌린다"고 알려 준다.

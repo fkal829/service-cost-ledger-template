@@ -28,9 +28,11 @@ Claude가 내 GitHub 레포들을 읽고 프로젝트와 외부 서비스를 정
 | 어디서 | 어떻게 | 토큰 |
 |---|---|---|
 | 이 컴퓨터 | `node scripts/serve.mjs` → http://localhost:4321 | 필요 없음 |
-| 휴대폰·다른 기기 | 내 레포의 GitHub Pages 주소 (세팅 때 켜 줘요) | 처음 한 번 넣기 (페이지에 만드는 법이 있어요) |
+| 휴대폰·다른 기기 | 공용 페이지 **https://fkal829.github.io/service-cost-ledger-template/** | 처음 한 번 넣기 (페이지에 만드는 법이 있어요) |
 
-공개 페이지에는 데이터가 없고, 페이지를 연 사람이 자기 토큰으로 자기 레포를 읽어요. 그래서 같은 페이지를 다른 GitHub 계정으로 열면 그 사람의 장부가 보여요.
+공용 페이지에는 데이터가 없어요. 페이지를 연 사람의 브라우저가 그 사람 토큰으로 **그 사람 레포**에서 바로 읽어요. 그래서 같은 주소를 열어도 사람마다 자기 장부가 보이고, 다른 사람(페이지 만든 사람 포함)에게 데이터가 가지 않아요. 토큰은 **장부 레포 하나만** 고를 수 있게 만드세요.
+
+자기 주소로 따로 배포하고 싶으면(GitHub 유료 계정 필요): 레포 Settings → Pages에서 Source를 GitHub Actions로 하고, 레포 변수 `LEDGER_PAGES`를 `on`으로 두면 `장부 페이지 배포` Actions가 돌아요.
 
 ## Claude에게 시킬 수 있는 것
 
@@ -49,7 +51,7 @@ Claude가 내 GitHub 레포들을 읽고 프로젝트와 외부 서비스를 정
 |---|---|---|---|
 | 새 프로젝트·서비스 연결 | GitHub Actions `레포 스캔` | 매주 월요일 | 레포 시크릿 `LEDGER_SCAN_TOKEN` (없으면 건너뜀) |
 | 비용·크레딧 | Claude 앱 예약 작업 | 평일 아침 | Claude 앱이 켜진 컴퓨터, Chrome에 각 서비스 로그인 |
-| 페이지 배포 | GitHub Actions `장부 페이지 배포` | `docs/`가 바뀔 때 | Pages 켜기 |
+| 내 주소로 페이지 배포 (선택) | GitHub Actions `장부 페이지 배포` | `docs/`가 바뀔 때 | 유료 계정, 레포 변수 `LEDGER_PAGES=on` |
 
 `LEDGER_SCAN_TOKEN`: 레포 **Settings → Secrets and variables → Actions → New repository secret**. 내 레포와 회사 조직 레포를 한 번에 읽으려면 [classic token](https://github.com/settings/tokens/new?scopes=repo&description=cost-ledger-scan)(`repo` 범위)이 가장 간단해요. 넣기 싫으면 가끔 "장부 정리해 줘"라고 하면 같은 스캔을 토큰 없이 돌려요.
 
