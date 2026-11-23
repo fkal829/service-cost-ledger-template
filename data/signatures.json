@@ -1,0 +1,430 @@
+{
+  "_about": "레포 코드에서 외부 서비스를 알아보는 규칙. env: 환경변수 이름, deps: package.json / requirements / pyproject 패키지 이름, files: 레포 안 파일 경로(앞부분 일치), hosts: 코드에 적힌 주소. 새 서비스를 장부에 만들었으면 여기에 규칙을 더한다. name·category·provider·billing은 장부에 그 서비스가 없을 때 새로 만들 때 쓴다(billing은 추정이라 note에 \"플랜 확인 필요\"가 붙는다).",
+  "services": {
+    "s-claude": {
+      "name": "Claude API",
+      "category": "ai",
+      "provider": "Anthropic",
+      "billing": "prepaid",
+      "env": [
+        "ANTHROPIC_API_KEY"
+      ],
+      "deps": [
+        "anthropic",
+        "@anthropic-ai/sdk",
+        "@ai-sdk/anthropic",
+        "langchain-anthropic"
+      ]
+    },
+    "s-gemini": {
+      "name": "Gemini API",
+      "category": "ai",
+      "provider": "Google AI Studio",
+      "billing": "usage",
+      "env": [
+        "GEMINI_API_KEY"
+      ],
+      "deps": [
+        "google-generativeai",
+        "google-genai",
+        "@google/genai",
+        "@google/generative-ai",
+        "@ai-sdk/google"
+      ]
+    },
+    "s-groq": {
+      "name": "Groq",
+      "category": "ai",
+      "provider": "Groq",
+      "billing": "usage",
+      "env": [
+        "GROQ_API_KEY"
+      ],
+      "deps": [
+        "groq",
+        "groq-sdk",
+        "@ai-sdk/groq"
+      ]
+    },
+    "s-upstage": {
+      "name": "Upstage",
+      "category": "ai",
+      "provider": "Upstage",
+      "billing": "usage",
+      "env": [
+        "UPSTAGE_API_KEY"
+      ]
+    },
+    "s-hf": {
+      "name": "Hugging Face",
+      "category": "ai",
+      "provider": "Hugging Face",
+      "billing": "free",
+      "env": [
+        "HF_TOKEN",
+        "HUGGINGFACE_TOKEN",
+        "HUGGINGFACEHUB_API_TOKEN"
+      ],
+      "deps": [
+        "huggingface_hub",
+        "@huggingface/inference"
+      ]
+    },
+    "s-pyannote": {
+      "name": "pyannoteAI",
+      "category": "ai",
+      "provider": "pyannoteAI",
+      "billing": "usage",
+      "env": [
+        "PYANNOTE_API_KEY",
+        "PYANNOTEAI_API_KEY"
+      ],
+      "deps": [
+        "pyannote.audio"
+      ]
+    },
+    "s-rtzr": {
+      "name": "리턴제로 STT",
+      "category": "ai",
+      "provider": "RTZR (VITO)",
+      "billing": "usage",
+      "env": [
+        "RTZR_CLIENT_ID",
+        "RTZR_CLIENT_SECRET"
+      ],
+      "hosts": [
+        "openapi.vito.ai"
+      ]
+    },
+    "s-clova": {
+      "name": "CLOVA Speech",
+      "category": "ai",
+      "provider": "NAVER Cloud",
+      "billing": "usage",
+      "env": [
+        "CLOVA_SPEECH_SECRET",
+        "CLOVA_SPEECH_INVOKE_URL"
+      ]
+    },
+    "s-mediapipe": {
+      "name": "MediaPipe",
+      "category": "ai",
+      "provider": "Google · 로컬 실행",
+      "billing": "free",
+      "deps": [
+        "mediapipe",
+        "@mediapipe/tasks-vision"
+      ]
+    },
+    "s-solapi": {
+      "name": "솔라피",
+      "category": "msg",
+      "provider": "SOLAPI · SMS·알림톡",
+      "billing": "prepaid",
+      "env": [
+        "SOLAPI_API_KEY",
+        "SOLAPI_API_SECRET"
+      ],
+      "deps": [
+        "solapi"
+      ]
+    },
+    "s-slack": {
+      "name": "Slack",
+      "category": "msg",
+      "provider": "Slack",
+      "billing": "free",
+      "env": [
+        "SLACK_BOT_TOKEN",
+        "SLACK_WEBHOOK_URL"
+      ],
+      "deps": [
+        "@slack/web-api",
+        "@slack/bolt",
+        "slack_sdk",
+        "slack-bolt"
+      ]
+    },
+    "s-discord": {
+      "name": "Discord",
+      "category": "msg",
+      "provider": "Discord",
+      "billing": "free",
+      "env": [
+        "DISCORD_TOKEN",
+        "DISCORD_BOT_TOKEN",
+        "DISCORD_WEBHOOK_URL"
+      ],
+      "deps": [
+        "discord.js",
+        "discord.py"
+      ]
+    },
+    "s-smtp": {
+      "name": "메일 발송 (SMTP)",
+      "category": "msg",
+      "provider": "SMTP",
+      "billing": "free",
+      "env": [
+        "SMTP_HOST",
+        "SMTP_PASSWORD"
+      ],
+      "deps": [
+        "nodemailer"
+      ]
+    },
+    "s-notion": {
+      "name": "Notion",
+      "category": "saas",
+      "provider": "Notion",
+      "billing": "monthly",
+      "env": [
+        "NOTION_TOKEN",
+        "NOTION_API_KEY",
+        "NOTION_API_TOKEN"
+      ],
+      "deps": [
+        "@notionhq/client",
+        "notion-client"
+      ]
+    },
+    "s-supabase": {
+      "name": "Supabase",
+      "category": "db",
+      "provider": "Supabase",
+      "billing": "free",
+      "env": [
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+      ],
+      "deps": [
+        "@supabase/supabase-js",
+        "supabase"
+      ]
+    },
+    "s-firebase": {
+      "name": "Firebase Hosting",
+      "category": "server",
+      "provider": "Firebase",
+      "billing": "free",
+      "files": [
+        "firebase.json"
+      ]
+    },
+    "s-vercel": {
+      "name": "Vercel",
+      "category": "server",
+      "provider": "Vercel",
+      "billing": "monthly",
+      "files": [
+        "vercel.json"
+      ]
+    },
+    "s-vblob": {
+      "name": "Vercel Blob",
+      "category": "storage",
+      "provider": "Vercel",
+      "billing": "usage",
+      "env": [
+        "BLOB_READ_WRITE_TOKEN"
+      ],
+      "deps": [
+        "@vercel/blob"
+      ]
+    },
+    "s-render": {
+      "name": "Render",
+      "category": "server",
+      "provider": "Render",
+      "billing": "free",
+      "files": [
+        "render.yaml"
+      ]
+    },
+    "s-cfpages": {
+      "name": "Cloudflare Pages",
+      "category": "server",
+      "provider": "Cloudflare",
+      "billing": "free",
+      "files": [
+        "wrangler.toml",
+        "wrangler.json"
+      ]
+    },
+    "s-gha": {
+      "name": "GitHub Actions",
+      "category": "dev",
+      "provider": "GitHub",
+      "billing": "free",
+      "files": [
+        ".github/workflows/"
+      ]
+    },
+    "s-youtube": {
+      "name": "YouTube Data API",
+      "category": "social",
+      "provider": "Google · 무료 할당량",
+      "billing": "free",
+      "env": [
+        "YOUTUBE_API_KEY"
+      ]
+    },
+    "s-instagram": {
+      "name": "Instagram Graph API",
+      "category": "social",
+      "provider": "Meta",
+      "billing": "free",
+      "env": [
+        "INSTAGRAM_ACCESS_TOKEN",
+        "IG_ACCESS_TOKEN"
+      ]
+    },
+    "s-threads": {
+      "name": "Threads API",
+      "category": "social",
+      "provider": "Meta",
+      "billing": "free",
+      "env": [
+        "THREADS_ACCESS_TOKEN"
+      ]
+    },
+    "s-tiktok": {
+      "name": "TikTok API",
+      "category": "social",
+      "provider": "TikTok",
+      "billing": "free",
+      "env": [
+        "TIKTOK_CLIENT_KEY",
+        "TIKTOK_ACCESS_TOKEN"
+      ]
+    },
+    "s-naver-search": {
+      "name": "네이버 검색 API",
+      "category": "data",
+      "provider": "NAVER Developers",
+      "billing": "free",
+      "env": [
+        "NAVER_CLIENT_ID",
+        "NAVER_CLIENT_SECRET"
+      ]
+    },
+    "s-datagokr": {
+      "name": "공공데이터포털",
+      "category": "data",
+      "provider": "data.go.kr",
+      "billing": "free",
+      "env": [
+        "HOLIDAY_API_KEY",
+        "DATA_GO_KR_KEY"
+      ],
+      "hosts": [
+        "apis.data.go.kr"
+      ]
+    },
+    "s-modusign": {
+      "name": "모두싸인 API",
+      "category": "saas",
+      "provider": "모두싸인",
+      "billing": "monthly",
+      "env": [
+        "MODUSIGN_API_KEY",
+        "MODUSIGN_WEBHOOK_SECRET"
+      ]
+    },
+    "s-aladin": {
+      "name": "알라딘 API",
+      "category": "data",
+      "provider": "알라딘 TTB",
+      "billing": "free",
+      "env": [
+        "ALADIN_TTB_KEY"
+      ],
+      "hosts": [
+        "aladin.co.kr/ttb"
+      ]
+    },
+    "s-healthchecks": {
+      "name": "Healthchecks.io",
+      "category": "dev",
+      "provider": "Healthchecks.io",
+      "billing": "free",
+      "env": [
+        "HEALTHCHECKS_URL"
+      ],
+      "hosts": [
+        "hc-ping.com"
+      ]
+    },
+    "s-wiki": {
+      "name": "Wikimedia · Wikidata",
+      "category": "data",
+      "provider": "Wikimedia",
+      "billing": "free",
+      "hosts": [
+        "wikidata.org",
+        "wikipedia.org/w/api.php"
+      ]
+    },
+    "s-gnews": {
+      "name": "Google News RSS",
+      "category": "data",
+      "provider": "Google",
+      "billing": "free",
+      "hosts": [
+        "news.google.com/rss"
+      ]
+    },
+    "s-automate": {
+      "name": "Automate",
+      "category": "dev",
+      "provider": "LlamaLab Automate",
+      "billing": "free",
+      "env": [
+        "AUTOMATE_SECRET"
+      ]
+    },
+    "s-gcs": {
+      "name": "Google Cloud Storage",
+      "category": "storage",
+      "provider": "Google Cloud",
+      "billing": "usage",
+      "env": [
+        "GCS_BUCKET"
+      ],
+      "deps": [
+        "@google-cloud/storage",
+        "google-cloud-storage"
+      ]
+    }
+  },
+  "ignoreEnv": [
+    "GITHUB_TOKEN",
+    "NODE_ENV",
+    "PORT",
+    "HOST",
+    "DEBUG",
+    "TZ",
+    "PATH",
+    "HOME",
+    "CI",
+    "LOG_LEVEL",
+    "SECRET_KEY",
+    "JWT_SECRET",
+    "SESSION_SECRET",
+    "NEXTAUTH_SECRET",
+    "DATABASE_URL",
+    "API_KEY",
+    "ADMIN_TOKEN",
+    "CRON_SECRET",
+    "GH_TOKEN",
+    "LEDGER_SCAN_TOKEN",
+    "LEDGER_SCAN_TOKEN_ORG",
+    "GITHUB_PAT",
+    "ANTHROPIC_ADMIN_KEY",
+    "VERCEL_TOKEN"
+  ]
+}

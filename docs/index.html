@@ -1,0 +1,1252 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>서비스 비용 장부</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: three views under one header — costs (summary, attention, ledger), every external service grouped by kind, and every project with what it uses. */
+:root{
+  --bg:#f3f4f7; --surface:#ffffff; --sunk:#eceef3; --line:#dcdfe7; --line-strong:#c4c8d3;
+  --fg:#141822; --muted:#5b6274; --faint:#6c7386;
+  --accent:#3042c2; --accent-soft:#e6e9fb; --accent-ink:#ffffff;
+  --ok:#1b7f52; --ok-soft:#e2f3ea; --warn:#a86a10; --warn-soft:#fbf0dc; --crit:#c2342a; --crit-soft:#fbe4e2; --info:#4b5a7a; --info-soft:#e7eaf1;
+  --c1:#3042c2; --c2:#0f8a8a; --c3:#c0590f; --c4:#8a3fb5; --c5:#5b7a12; --c6:#b5306d; --c0:#8b91a1;
+  --font:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1016; --surface:#161922; --sunk:#1c2029; --line:#2a2f3c; --line-strong:#3a4051;
+  --fg:#e7e9ef; --muted:#9ba1b3; --faint:#878da0;
+  --accent:#8f9cff; --accent-soft:#232a4d; --accent-ink:#0e1016;
+  --ok:#4fc38e; --ok-soft:#173326; --warn:#e3aa4f; --warn-soft:#382a12; --crit:#f2766c; --crit-soft:#3d1c1a; --info:#a5b1cc; --info-soft:#232838;
+  --c1:#8f9cff; --c2:#43c4c4; --c3:#f0904a; --c4:#c58cf0; --c5:#9cc24a; --c6:#f07aac; --c0:#878da0;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1016; --surface:#161922; --sunk:#1c2029; --line:#2a2f3c; --line-strong:#3a4051;
+  --fg:#e7e9ef; --muted:#9ba1b3; --faint:#878da0;
+  --accent:#8f9cff; --accent-soft:#232a4d; --accent-ink:#0e1016;
+  --ok:#4fc38e; --ok-soft:#173326; --warn:#e3aa4f; --warn-soft:#382a12; --crit:#f2766c; --crit-soft:#3d1c1a; --info:#a5b1cc; --info-soft:#232838;
+  --c1:#8f9cff; --c2:#43c4c4; --c3:#f0904a; --c4:#c58cf0; --c5:#9cc24a; --c6:#f07aac; --c0:#878da0;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px}
+.top h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em;text-wrap:balance}
+.top .sub{color:var(--muted);font-size:13px;margin-top:2px}
+.top .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fx{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:4px 6px 4px 10px}
+.fx input{width:72px;border:0;background:var(--sunk);border-radius:6px;padding:4px 6px;text-align:right}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:7px 12px;font-weight:500;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--fg)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 45%,transparent)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--fg);border-color:var(--line)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{border:0;background:transparent;padding:9px 14px;font-weight:600;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;display:inline-flex;gap:6px;align-items:baseline}
+.tab .c{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--faint)}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--fg)}
+.view{display:flex;flex-direction:column;gap:20px}
+
+.notice{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:10px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;font-size:13px}
+.notice.example{background:var(--accent-soft);border-color:transparent}
+.notice.err{background:var(--crit-soft);border-color:transparent}
+
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.kpi{padding:16px 18px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi+.kpi{border-left:1px solid var(--line)}
+.kpi .lab{font-size:12px;color:var(--muted);font-weight:500}
+.kpi .val{font-size:24px;font-weight:500;line-height:1.2}
+.kpi .val.lead{color:var(--accent)}
+.kpi .foot{font-size:12px;color:var(--muted)}
+.meter{position:relative;height:6px;background:var(--sunk);border-radius:99px;margin-top:4px}
+.meter>i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--ok)}
+.meter>i.warn{background:var(--warn)} .meter>i.crit{background:var(--crit)} .meter>i.credit{background:var(--accent)}
+.meter>b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--fg);opacity:.55;border-radius:2px}
+
+.split{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;min-width:0}
+.panel h2{margin:0 0 12px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.panel h2 .count{font-family:var(--mono);font-weight:500;color:var(--muted);font-size:12px}
+.alerts{display:flex;flex-direction:column;gap:2px;max-height:340px;overflow:auto;margin:0 -6px}
+.alert{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:10px;align-items:start;padding:8px 6px;border-radius:8px;border:0;background:transparent;text-align:left;width:100%}
+.alert:hover{background:var(--sunk)}
+.alert .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;background:var(--info)}
+.alert.crit .dot{background:var(--crit)} .alert.warn .dot{background:var(--warn)}
+.alert .t{font-weight:600;font-size:13px}
+.alert .d{color:var(--muted);font-size:12px}
+.alert .who{font-size:12px;color:var(--muted);text-align:right;white-space:nowrap}
+.empty-ok{color:var(--muted);font-size:13px;padding:6px 0}
+
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:baseline}
+.bar-row .name{font-size:13px;font-weight:500;display:flex;gap:6px;align-items:center;min-width:0}
+.bar-row .name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-row .amt{font-size:13px}
+.bar-row .track{grid-column:1/-1;height:8px;background:var(--sunk);border-radius:4px;overflow:hidden;position:relative}
+.bar-row .track i{position:absolute;left:0;top:0;display:block;height:100%;border-radius:4px}
+.bar-row .meta{grid-column:1/-1;font-size:11px;color:var(--faint)}
+.sw{width:9px;height:9px;border-radius:3px;flex:none;display:inline-block}
+
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 11px;font-size:12.5px;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.filters .grow{flex:1}
+.field-s{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 9px;font-size:13px}
+.filters input[type=search]{min-width:160px}
+.check{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
+
+.ledger{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.row{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.05fr) minmax(0,1.7fr) minmax(0,1fr) minmax(0,.95fr);gap:14px;align-items:center;padding:12px 16px;border-top:1px solid var(--line);width:100%;text-align:left;background:transparent;border-left:0;border-right:0;border-bottom:0}
+.row.head{border-top:0;background:var(--sunk);font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.02em;padding-block:8px;cursor:default}
+button.row:hover{background:color-mix(in srgb,var(--sunk) 60%,transparent)}
+.row.ended{opacity:.55}
+.svc{min-width:0}
+.svc .n{font-weight:600;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.svc .p{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tag{font-size:11px;border-radius:5px;padding:1px 6px;background:var(--sunk);color:var(--muted);font-weight:500;white-space:nowrap}
+.tag.ex{background:var(--accent-soft);color:var(--accent)}
+.tag.paused,.tag.dev{background:var(--warn-soft);color:var(--warn)}
+.tag.ended{background:var(--info-soft);color:var(--info)}
+.tag.live{background:var(--ok-soft);color:var(--ok)}
+.tag.free{background:var(--ok-soft);color:var(--ok)}
+.tag.paid{background:var(--accent-soft);color:var(--accent)}
+.kind{display:flex;flex-direction:column;gap:2px;font-size:12.5px;min-width:0}
+.kind .b{color:var(--muted);font-size:12px}
+.state{min-width:0;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:5px}
+.state .meter{margin-top:0}
+.state .sub{color:var(--faint);font-size:11.5px}
+.creds{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.creds>div{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;padding:8px 10px;border:1px solid var(--line);border-radius:8px}
+.creds .x{color:var(--muted);font-size:12px}
+.money{text-align:right}
+.money .k{font-weight:500}
+.money .o{font-size:11.5px;color:var(--faint)}
+.due{text-align:right;font-size:12.5px;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.dpill{font-family:var(--mono);font-size:11px;border-radius:5px;padding:1px 6px;background:var(--sunk);color:var(--muted)}
+.dpill.warn{background:var(--warn-soft);color:var(--warn)} .dpill.crit{background:var(--crit-soft);color:var(--crit)}
+.ledger-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);background:var(--sunk)}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.empty strong{display:block;color:var(--fg);font-size:15px;margin-bottom:4px}
+
+/* services map */
+.group{display:flex;flex-direction:column;gap:10px}
+.group h3{margin:0;font-size:13px;font-weight:600;color:var(--muted);display:flex;gap:8px;align-items:baseline}
+.group h3 .c{font-family:var(--mono);font-weight:500;font-size:12px;color:var(--faint)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:8px;text-align:left;min-width:0}
+button.card:hover{border-color:var(--line-strong)}
+.card.ended{opacity:.6}
+.card .hd{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;min-width:0}
+.card .nm,.card .pv{overflow-wrap:anywhere}
+.card .nm{font-weight:600;font-size:14px;min-width:0}
+.card .pv{font-size:12px;color:var(--muted)}
+.card .tags{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.uses{display:flex;flex-direction:column;gap:3px;font-size:12.5px}
+.uses div{display:flex;gap:6px;align-items:baseline;min-width:0}
+.uses .sw{transform:translateY(1px)}
+.uses b{font-weight:500;white-space:nowrap}
+.uses span{color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.card .ft{font-size:12px;color:var(--faint);display:flex;justify-content:space-between;gap:8px}
+
+/* projects */
+.pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:10px;text-align:left;min-width:0}
+button.pcard:hover{border-color:var(--line-strong)}
+.drawer.wide{width:min(860px,100%)}
+.arch-wrap{flex:none;overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);padding:12px}
+.arch-wrap svg{display:block;min-width:700px;width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.pv-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pv-facts{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:13px}
+.pv-facts dt{color:var(--faint)} .pv-facts dd{margin:0;overflow-wrap:anywhere}
+.pcard.off{background:var(--sunk);border-style:dashed}
+.pcard.off .nm,.pcard.off .ds,.pcard.off dl,.pcard.off .svchips{opacity:.6}
+.tag.off{background:var(--line);color:var(--fg)}
+.pcard .hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pcard .nm{font-weight:700;font-size:15px}
+.pcard .ds{font-size:13px;color:var(--muted)}
+.pcard dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;font-size:12.5px}
+.pcard dt{color:var(--faint)}
+.pcard dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.svchips{display:flex;flex-wrap:wrap;gap:4px}
+.svchip{font-size:11.5px;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--fg);white-space:nowrap}
+.svchip.paid{border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)}
+.pcard .ft{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,12,18,.42);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(500px,100%);background:var(--surface);z-index:41;display:flex;flex-direction:column;border-left:1px solid var(--line);box-shadow:-12px 0 40px rgba(0,0,0,.18);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.drawer header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);gap:10px}
+.drawer header h3{margin:0;font-size:16px}
+.drawer .body{flex:1;overflow:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.drawer footer{border-top:1px solid var(--line);padding:12px 18px;display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.drawer footer .r{display:flex;gap:8px;margin-left:auto}
+[hidden]{display:none!important}
+.notice.gh{display:block}
+.ghform{display:flex;flex-direction:column;gap:8px}
+.ghform code{font-family:'IBM Plex Mono',monospace;font-size:12px}
+.howto{border-top:1px solid var(--line);padding-top:8px;font-size:13px}
+.howto summary{cursor:pointer;font-weight:600}
+.howto ol{margin:8px 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;line-height:1.55}
+.howto a{color:var(--accent)}
+.howto .warn{color:var(--crit)}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.f>label,.f>.l{font-size:12px;font-weight:600;color:var(--muted)}
+.f input,.f select,.f textarea{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:8px 10px;font-size:14px;width:100%}
+.f textarea{min-height:64px;resize:vertical}
+.hint{font-size:11.5px;color:var(--faint)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.seg label{flex:1 1 auto;text-align:center;padding:7px 8px;font-size:12.5px;cursor:pointer;border-left:1px solid var(--line);white-space:nowrap}
+.seg label:first-child{border-left:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:var(--fg);color:var(--bg);font-weight:600}
+.seg label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:-2px}
+.box{background:var(--sunk);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:12px}
+.uselist{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto}
+.useitem{display:grid;grid-template-columns:auto minmax(0,9rem) minmax(0,1fr);gap:8px;align-items:center;font-size:13px}
+.useitem label{display:flex;gap:6px;align-items:center;min-width:0}
+.useitem label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.useitem input[type=text]{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:4px 8px;font-size:12.5px;width:100%}
+.useitem input[type=text]:disabled{opacity:.4}
+.spark{width:100%;height:auto;display:block}
+.confirm{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--crit);flex-wrap:wrap}
+.swpick{display:flex;gap:6px}
+.swpick label{width:28px;height:28px;border-radius:7px;border:1px solid var(--line);display:grid;place-items:center;cursor:pointer}
+.swpick input{position:absolute;opacity:0}
+.swpick label:has(input:checked){border:2px solid var(--fg)}
+.swpick .sw{width:14px;height:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:60}
+
+@media (max-width:900px){
+  .split{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi:nth-child(3){border-left:0}
+  .kpi:nth-child(n+3){border-top:1px solid var(--line)}
+}
+@media (max-width:720px){
+  .row.head{display:none}
+  .row{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"svc money" "state due" "kind kind";gap:8px 12px}
+  .row .svc{grid-area:svc} .row .money{grid-area:money} .row .state{grid-area:state} .row .due{grid-area:due} .row .kind{grid-area:kind;flex-direction:row;gap:8px}
+  .grid2{grid-template-columns:1fr}
+  .useitem{grid-template-columns:auto minmax(0,1fr)} .useitem input[type=text]{grid-column:2}
+  .pcards,.cards{grid-template-columns:1fr}
+}
+@media (max-width:440px){ .kpi .val{font-size:20px} .filters input[type=search]{min-width:0;width:100%} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>서비스 비용 장부</h1>
+      <div class="sub" id="subline">프로젝트별로 쓰는 외부 서비스와 비용을 한곳에서 봅니다</div>
+    </div>
+    <div class="actions">
+      <label class="fx" for="fxInput">환율 $1 = ₩<input id="fxInput" class="num" type="number" min="1" step="1" value="1400"></label>
+      <button class="btn" data-act="newProject" id="btnNewP">+ 프로젝트</button>
+      <button class="btn primary" data-act="new" id="btnNew">+ 서비스</button>
+    </div>
+  </div>
+
+  <nav class="tabs" role="tablist" aria-label="보기">
+    <button class="tab" role="tab" data-act="tab" data-id="costs" id="tab-costs">비용</button>
+    <button class="tab" role="tab" data-act="tab" data-id="services" id="tab-services">서비스 전체 <span class="c" id="cntS"></span></button>
+    <button class="tab" role="tab" data-act="tab" data-id="projects" id="tab-projects">프로젝트 <span class="c" id="cntP"></span></button>
+  </nav>
+
+  <div id="notices"></div>
+
+  <!-- costs -->
+  <section class="view" id="view-costs">
+    <section class="kpis" id="kpis" aria-label="이번 달 요약"></section>
+    <div class="split">
+      <section class="panel"><h2>확인 필요 <span class="count" id="alertCount"></span></h2><div class="alerts" id="alerts"></div></section>
+      <section class="panel"><h2>프로젝트별 월 비용 <span class="count">진한 막대 실제 지출 · 연한 막대 크레딧 포함</span></h2><div class="bars" id="bars"></div></section>
+    </div>
+    <div class="filters">
+      <div class="chips" id="projChips"></div>
+      <div class="grow"></div>
+      <select class="field-s" id="sortSel" aria-label="정렬">
+        <option value="cost">월 비용순</option><option value="due">다음 결제순</option><option value="name">이름순</option>
+      </select>
+      <input class="field-s" id="q" type="search" placeholder="서비스·제공사 검색">
+      <label class="check"><input type="checkbox" id="showFree"> 무료 포함</label>
+      <label class="check"><input type="checkbox" id="showEnded"> 해지 포함</label>
+    </div>
+    <section class="ledger" id="ledger" aria-label="유료 서비스 목록"></section>
+  </section>
+
+  <!-- services -->
+  <section class="view" id="view-services" hidden>
+    <div class="filters">
+      <div class="chips" id="billChips"></div>
+      <div class="grow"></div>
+      <select class="field-s" id="svProj" aria-label="프로젝트"></select>
+      <input class="field-s" id="svQ" type="search" placeholder="서비스·용도 검색">
+      <label class="check"><input type="checkbox" id="svEnded"> 해지 포함</label>
+    </div>
+    <div id="svGroups" class="view"></div>
+  </section>
+
+  <!-- projects -->
+  <section class="view" id="view-projects" hidden>
+    <div class="filters"><div class="chips" id="kindChips"></div></div>
+    <div class="pcards" id="pcards"></div>
+  </section>
+</div>
+
+<div id="overlay"></div>
+<div id="toastHost"></div>
+
+<script>
+(() => {
+const CATS = {ai:'AI·모델 API', server:'서버·호스팅', db:'DB·인증', storage:'스토리지', msg:'메신저·알림', social:'SNS·콘텐츠 API', data:'데이터·공공 API', saas:'업무 도구', dev:'개발·운영', domain:'도메인', other:'기타'};
+const BILL = {monthly:'월 정액', yearly:'연 정액', usage:'사용량 과금', prepaid:'선불 크레딧', free:'무료'};
+const STATUS = {active:'사용 중', paused:'일시정지', ended:'해지'};
+const PKIND = {company:'회사', personal:'개인', team:'팀·대회', school:'학교'};
+const PSTAT = {live:'운영 중', dev:'개발 중', ended:'종료'};
+const NOW = new Date();
+const ym = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+const YM = ym(NOW);
+const DIM = new Date(NOW.getFullYear(), NOW.getMonth()+1, 0).getDate();
+const VIEWS = ['costs','services','projects'];
+
+const S = {db:null, canWrite:true, projects:[], services:[], fx:1400, got:{p:false,s:false}, failed:false, slow:false,
+  view:'costs',
+  f:{project:'all', q:'', ended:false, free:false, sort:'cost'},
+  sv:{bill:'all', project:'all', q:'', ended:false},
+  pv:{kind:'all'},
+  drawer:null};
+
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { const n = parseFloat(String(v ?? '').replace(/,/g,'')); return isFinite(n) ? n : 0; };
+const krw = (n, c) => c === 'USD' ? n * S.fx : n;
+const fK = n => '₩' + Math.round(n).toLocaleString('ko-KR');
+const fM = (n, c) => c === 'USD' ? '$' + (+n).toLocaleString('en-US', {maximumFractionDigits: 2}) : fK(n);
+const pct = (a, b) => b > 0 ? Math.max(0, Math.min(100, a / b * 100)) : 0;
+const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
+
+function daysUntil(d){
+  if (!d) return null;
+  const [y, m, dd] = d.split('-').map(Number);
+  if (!y || !m || !dd) return null;
+  const t = new Date(y, m-1, dd), today = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+  return Math.round((t - today) / 864e5);
+}
+const isFree = s => s.billing === 'free';
+const st = s => s.status || 'active';
+function sameMonth(s){ return s.updatedAt && ym(new Date(s.updatedAt)) === YM; }
+function projected(s){
+  const spent = num(s.spent);
+  if (!sameMonth(s)) return spent;
+  const day = Math.max(1, new Date(s.updatedAt).getDate());
+  return day >= DIM ? spent : spent / day * DIM;
+}
+function monthlyOrig(s){
+  if (st(s) !== 'active') return 0;
+  switch (s.billing){
+    case 'monthly': return num(s.amount);
+    case 'yearly': return num(s.amount) / 12;
+    case 'usage': return projected(s);
+    case 'prepaid': { const cv = creditCover(s, 30); return cv === null ? num(s.burn) : Math.max(0, num(s.burn) - cv); }
+  }
+  return 0;
+}
+// 크레딧까지 포함한 월 사용 규모 (실제 지출과 따로 보여 준다)
+function usageValue(s){
+  if (st(s) !== 'active') return 0;
+  if (s.billing === 'usage' && num(s.usage) > 0){
+    if (!sameMonth(s)) return num(s.usage);
+    const day = Math.max(1, new Date(s.updatedAt).getDate());
+    return day >= DIM ? num(s.usage) : num(s.usage) / day * DIM;
+  }
+  if (s.billing === 'prepaid') return num(s.burn);
+  return monthlyOrig(s);
+}
+const usageKRW = s => krw(usageValue(s), s.currency);
+const monthlyKRW = s => krw(monthlyOrig(s), s.currency);
+function noAmount(s){
+  if (isFree(s)) return false;
+  if (s.billing === 'usage') return !num(s.budget) && !num(s.spent) && !num(s.usage);
+  if (s.billing === 'prepaid') return !num(s.credit) && !num(s.remaining);
+  return !num(s.amount);
+}
+// 크레딧 묶음: [{name, left, total, expires:'YYYY-MM-DD', kind:'paid'|'promo'|'trial', note}]
+function creditsOf(s){ return (Array.isArray(s.credits) ? s.credits : []).filter(c => c && num(c.left) > 0); }
+// 월 소진액으로 만료가 빠른 크레딧부터 쓴다고 보고, 쓸 수 있는 크레딧이 며칠 버티는지와 그 사이 만료로 사라질 금액을 계산
+function creditRun(s){
+  const cs = creditsOf(s), perDay = num(s.burn) / 30;
+  if (!cs.length || perDay <= 0) return null;
+  const list = cs.map(c => ({left: num(c.left), exp: daysUntil(c.expires)})).filter(c => c.exp === null || c.exp > 0)
+    .sort((a, b) => (a.exp ?? 1e9) - (b.exp ?? 1e9));
+  let day = 0, lost = 0;
+  for (const c of list){
+    const until = c.exp === null ? Infinity : c.exp;
+    if (day >= until){ lost += c.left; continue; }
+    const need = c.left / perDay;
+    if (day + need <= until) day += need;
+    else { lost += c.left - (until - day) * perDay; day = until; }
+  }
+  return {days: day, lost};
+}
+// 앞으로 horizon일 동안 남은 크레딧(만료 전 것만)으로 낼 수 있는 금액
+function creditCover(s, horizon){
+  const cs = creditsOf(s), perDay = num(s.burn) / 30;
+  if (!cs.length || perDay <= 0) return null;
+  const list = cs.map(c => ({left: num(c.left), exp: daysUntil(c.expires)})).filter(c => c.exp === null || c.exp > 0).sort((a, b) => (a.exp ?? 1e9) - (b.exp ?? 1e9));
+  let day = 0, used = 0;
+  for (const c of list){
+    const until = Math.min(c.exp ?? Infinity, horizon);
+    if (day >= until) continue;
+    const can = Math.min(c.left, (until - day) * perDay);
+    used += can; day += can / perDay;
+  }
+  return used;
+}
+function projOf(id){ return S.projects.find(p => p.id === id) || null; }
+function projName(id){ const p = projOf(id); return p ? p.name : '공통·미지정'; }
+function projColor(id){ const p = projOf(id); return p ? `var(--c${p.color || 1})` : 'var(--c0)'; }
+function usesOf(s){
+  const out = []; const seen = new Set();
+  (Array.isArray(s.usedBy) ? s.usedBy : []).forEach(u => { if (u && projOf(u.p) && !seen.has(u.p)){ seen.add(u.p); out.push({p:u.p, why:u.why || ''}); } });
+  if (s.projectId && projOf(s.projectId) && !seen.has(s.projectId)) out.push({p:s.projectId, why:''});
+  return out;
+}
+function servicesOf(pid){ return S.services.filter(s => usesOf(s).some(u => u.p === pid)); }
+const projActive = id => { const p = projOf(id); return !p || !p.inactive; };
+// 비용을 묶은 프로젝트가 비활성이거나, 연결된 프로젝트가 모두 비활성이면 비용·서비스 전체에서 뺀다
+function svcActive(s){
+  if (s.projectId && !projActive(s.projectId)) return false;
+  const ps = usesOf(s).map(u => u.p);
+  return !ps.length || ps.some(projActive);
+}
+const activeUses = s => usesOf(s).filter(u => projActive(u.p));
+const liveServices = () => S.services.filter(svcActive);
+const inactiveCount = () => S.projects.filter(p => p.inactive).length;
+
+function alertsFor(s){
+  const a = [];
+  if (st(s) !== 'active' || isFree(s)) return a;
+  const c = s.currency, dl = daysUntil(s.nextDate);
+  if (noAmount(s)) a.push({lv:'info', t:'금액 미입력', d:'플랜·예산·잔액을 넣으면 비용에 반영돼요'});
+  if (s.billing === 'usage'){
+    const b = num(s.budget), sp = num(s.spent), pj = projected(s);
+    if (b > 0 && sp >= b) a.push({lv:'crit', t:'예산 초과', d:`사용 ${fM(sp,c)} / 예산 ${fM(b,c)}`});
+    else if (b > 0 && sameMonth(s) && pj > b) a.push({lv:'crit', t:'이번 달 예산 초과 예상', d:`예상 ${fM(pj,c)} / 예산 ${fM(b,c)}`});
+    else if (b > 0 && sp / b >= .8) a.push({lv:'warn', t:'예산 80% 이상 사용', d:`사용 ${fM(sp,c)} / 예산 ${fM(b,c)}`});
+    if (sp && s.updatedAt && !sameMonth(s)) a.push({lv:'info', t:'이번 달 사용액 미입력', d:'지난달 입력값으로 추정 중이에요'});
+  }
+  if (s.billing === 'prepaid' && !noAmount(s)){
+    const cr = num(s.credit), r = num(s.remaining), bu = num(s.burn);
+    const cr2 = creditRun(s);
+    const run = cr2 ? cr2.days / 30 : (bu > 0 ? r / bu : null);
+    if (r <= 0) a.push({lv:'crit', t:'크레딧 소진', d:'충전하지 않으면 호출이 멈출 수 있어요'});
+    else if (run !== null && run < 1) a.push({lv:'crit', t:`크레딧 약 ${Math.max(1, Math.round(run * 30))}일분 남음`, d:cr2 ? `만료를 따지면 그 뒤로 쓸 잔액이 없어요 · 월 소진 ${fM(bu,c)}` : `잔액 ${fM(r,c)} · 월 소진 ${fM(bu,c)}`});
+    else if (cr > 0 && r / cr < .2) a.push({lv:'warn', t:'크레딧 20% 미만', d:`잔액 ${fM(r,c)} / ${fM(cr,c)}`});
+    if (cr2 && cr2.lost >= 1) a.push({lv:'warn', t:`쓰기 전에 만료될 크레딧 약 ${fM(Math.round(cr2.lost),c)}`, d:`지금 소진 속도(월 ${fM(bu,c)}) 기준`});
+  }
+  creditsOf(s).forEach(cd => {
+    const dl2 = daysUntil(cd.expires);
+    if (dl2 === null) return;
+    const ends = cd.kind === 'trial';
+    const win = ends ? 30 : 14;
+    if (dl2 >= 0 && dl2 <= win) a.push({lv: dl2 <= (ends ? 7 : 2) ? 'crit' : 'warn',
+      t:`${cd.name || '크레딧'} 만료 ${dl2 === 0 ? '오늘' : 'D-' + dl2}`,
+      d:`${fM(num(cd.left), s.currency)} 남음 · ${cd.note || (ends ? '끝나면 업그레이드 전까지 서비스가 멈춰요' : '그때까지 못 쓰면 사라져요')}`});
+  });
+  if (dl !== null){
+    const what = s.billing === 'prepaid' ? '크레딧 만료' : (s.billing === 'yearly' ? '연 갱신' : '결제');
+    if (dl < 0) a.push({lv:'warn', t:`${what}일이 지났어요`, d:'다음 날짜로 바꿔 두세요'});
+    else if (dl <= 7) a.push({lv: dl <= 2 ? 'crit' : 'warn', t:`${what} ${dl === 0 ? '오늘' : 'D-' + dl}`, d:`${s.nextDate}${s.billing==='monthly'||s.billing==='yearly' ? ' · ' + fM(num(s.amount), c) : ''}`});
+  }
+  if ((s.billing === 'usage' || s.billing === 'prepaid') && s.updatedAt && Date.now() - s.updatedAt > 14 * 864e5 && sameMonth(s) && !noAmount(s))
+    a.push({lv:'info', t:'2주 넘게 갱신 안 됨', d:'콘솔에서 사용량을 확인해 주세요'});
+  return a;
+}
+
+/* ---------- render ---------- */
+function render(){
+  VIEWS.forEach(v => { $('#view-' + v).hidden = S.view !== v; $('#tab-' + v).setAttribute('aria-selected', String(S.view === v)); });
+  $('#cntS').textContent = liveServices().filter(s => st(s) !== 'ended').length || '';
+  $('#cntP').textContent = S.projects.length || '';
+  renderNotices();
+  if (S.view === 'costs'){ renderKpis(); renderAlerts(); renderBars(); renderFilters(); renderLedger(); }
+  if (S.view === 'services') renderServices();
+  if (S.view === 'projects') renderProjects();
+  $('#fxInput').disabled = !S.canWrite;
+  $('#btnNew').disabled = $('#btnNewP').disabled = !S.canWrite || !S.db;
+}
+
+function ghConnectHtml(){
+  const why = S.ghErr === 401 ? '토큰이 틀렸거나 만료됐어요.' : S.ghErr === 404 ? '레포를 찾지 못했어요. 이름과 토큰 권한(Contents)을 확인해 주세요.' : S.ghErr === 403 ? '토큰에 이 레포 권한이 없어요.' : S.ghErr && S.ghErr !== 'notoken' ? '불러오지 못했어요. 잠시 후 다시 시도해 주세요.' : '';
+  return `<div class="notice gh"><form id="ghForm" class="ghform" autocomplete="off">
+    <b>GitHub 장부에 연결</b>
+    <span class="hint">장부는 GitHub 계정마다 따로예요. 내 계정의 비공개 레포(기본 이름 <code>service-cost-ledger</code>)의 <code>data/ledger.json</code>에 저장돼요. 그 레포만 고른 fine-grained 토큰(Contents 읽기·쓰기)을 넣어 주세요. 레포가 비어 있으면 빈 장부로 시작해요. 토큰은 이 브라우저에만 저장돼요.</span>
+    ${why ? `<span class="hint" style="color:var(--crit)">${why}</span>` : ''}
+    <div class="grid2"><input id="ghRepo" class="field-s" value="${esc(GH.repo)}" aria-label="레포 (소유자/이름)" placeholder="비우면 내계정/service-cost-ledger">
+    <input id="ghToken" class="field-s" type="password" placeholder="github_pat_…" aria-label="GitHub 토큰"></div>
+    <div><button class="btn primary" type="submit">연결</button></div>
+    <details class="howto"${GH.token ? '' : ' open'}><summary>토큰 만드는 법 (2분)</summary>
+      <ol>
+        <li>GitHub에 <b>장부를 둘 비공개 레포</b>가 있어야 해요. 없으면 <a href="https://github.com/new?name=service-cost-ledger&visibility=private" target="_blank" rel="noopener">새 레포 만들기 ↗</a>에서 이름 <code>service-cost-ledger</code>, <b>Private</b>로 만들어요. 비어 있어도 괜찮아요.</li>
+        <li><a href="https://github.com/settings/personal-access-tokens/new?name=cost-ledger-page&description=%EC%84%9C%EB%B9%84%EC%8A%A4%20%EB%B9%84%EC%9A%A9%20%EC%9E%A5%EB%B6%80&expires_in=365&contents=write" target="_blank" rel="noopener"><b>토큰 만들기 화면 열기 ↗</b></a> (GitHub 로그인 필요)</li>
+        <li><b>Token name</b>: <code>cost-ledger-page</code> (이름은 나중에 토큰 목록에서 알아보기 위한 것이라 아무거나 돼요). <b>Expiration</b>: 1년 정도.</li>
+        <li><b>Repository access</b> → <b>Only select repositories</b> → <code>service-cost-ledger</code> 하나만 골라요. <span class="warn">All repositories는 고르지 마세요.</span></li>
+        <li><b>Permissions</b> → <b>Repository permissions</b> → <b>Contents</b>를 <b>Read and write</b>로 바꿔요. (Metadata: Read-only는 자동으로 켜져요.) 다른 권한은 건드리지 않아요.</li>
+        <li>맨 아래 <b>Generate token</b> → 나온 <code>github_pat_…</code>을 복사해 위 칸에 붙여 넣고 <b>연결</b>.</li>
+      </ol>
+      <span class="hint">토큰은 GitHub에서 한 번만 보여 줘요. 이 브라우저에만 저장되고 다른 곳으로 보내지 않아요. 기기를 바꾸면 새로 넣거나, 같은 토큰을 비밀번호 관리자에 보관해 두고 쓰세요. 잃어버리거나 의심되면 <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener">토큰 목록 ↗</a>에서 지우고 새로 만들면 돼요.</span>
+    </details>
+  </form></div>`;
+}
+function renderNotices(){
+  const out = [];
+  if (S.local) out.push(`<div class="notice"><span>이 컴퓨터의 <code>data/ledger.json</code>을 열고 있어요. 저장하면 파일에 바로 써요. GitHub에 올리려면 커밋·푸시하거나 Claude에게 "장부 올려 줘"라고 하세요.</span></div>`);
+  else if (S.mode === 'gh' && (!GH.token || S.ghErr)) out.push(ghConnectHtml());
+  else if (S.failed) out.push(`<div class="notice err">저장소에 연결하지 못했어요. claude.ai에 로그인한 상태로 열어야 데이터가 보이고 저장돼요.</div>`);
+  if (S.mode === 'gh' && GH.token && !S.ghErr) out.push(`<div class="notice"><span>${GH.login ? `<b>${esc(GH.login)}</b> · ` : ''}<b>${esc(GH.repo)}</b>의 장부예요. ${S.ghNew ? '아직 비어 있어요. 첫 항목을 저장하면 장부 파일이 만들어져요.' : '저장하면 바로 커밋돼요.'}</span><button class="btn ghost" data-act="ghOut">로그아웃</button></div>`);
+  if (S.mirror) out.push(`<div class="notice"><span>이 장부는 GitHub 원본(<b>${esc(S.mirror)}</b>)의 사본이에요. 편집은 GitHub 장부에서 하고, 여기는 갱신 때 따라 바뀌어요.</span></div>`);
+  else if (S.slow && !(S.got.p && S.got.s)) out.push(`<div class="notice">데이터를 아직 불러오지 못했어요. 네트워크가 연결되면 자동으로 채워져요.</div>`);
+  const ex = S.services.filter(s => s.isExample).length + S.projects.filter(p => p.isExample).length;
+  if (ex && S.canWrite) out.push(`<div class="notice example"><span><b>예시</b> 표시가 붙은 항목은 샘플이에요. 예시를 편집해 저장하면 내 항목이 돼요.</span><span id="exArea"><button class="btn" data-act="clearEx">예시 지우기</button></span></div>`);
+  if (!S.canWrite && !S.mirror && S.mode !== 'gh') out.push(`<div class="notice">보기 전용으로 열려 있어요. 편집하려면 소유자에게 권한을 요청하세요.</div>`);
+  const ic = inactiveCount();
+  if (ic && S.view !== 'projects') out.push(`<div class="notice"><span>비활성 프로젝트 ${ic}개와 그 프로젝트만 쓰는 서비스는 여기서 빠져 있어요.</span><button class="btn ghost" data-act="tab" data-id="projects">프로젝트에서 보기</button></div>`);
+  $('#notices').innerHTML = out.join('');
+  $('#ghForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    let repo = $('#ghRepo').value.trim(); const tok = $('#ghToken').value.trim();
+    if (!tok) return;
+    const me = await fetch('https://api.github.com/user', {headers:{Authorization:'Bearer ' + tok, Accept:'application/vnd.github+json'}}).then(r => r.ok ? r.json() : null).catch(() => null);
+    if (!me){ toast('토큰으로 GitHub 계정을 확인하지 못했어요'); return; }
+    if (!repo) repo = me.login + '/service-cost-ledger';
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repo)){ toast('레포는 소유자/이름 형식으로 적어 주세요'); return; }
+    lsSet('ledger.repo', repo); lsSet('ledger.token', tok); lsSet('ledger.login', me.login); location.reload();
+  });
+}
+
+function renderKpis(){
+  const act = liveServices().filter(s => st(s) === 'active' && !isFree(s));
+  const total = act.reduce((t, s) => t + monthlyKRW(s), 0);
+  const fixed = act.filter(s => s.billing === 'monthly' || s.billing === 'yearly');
+  const fixedSum = fixed.reduce((t, s) => t + monthlyKRW(s), 0);
+  const usage = act.filter(s => s.billing === 'usage');
+  const uSpent = usage.reduce((t, s) => t + (sameMonth(s) ? krw(num(s.spent), s.currency) : 0), 0);
+  const uProj = usage.reduce((t, s) => t + monthlyKRW(s), 0);
+  const uBudget = usage.reduce((t, s) => t + krw(num(s.budget), s.currency), 0);
+  const pre = act.filter(s => s.billing === 'prepaid');
+  const preRem = pre.reduce((t, s) => t + krw(num(s.remaining), s.currency), 0);
+  const preBurn = pre.reduce((t, s) => t + monthlyKRW(s), 0);
+  const missing = act.filter(noAmount).length;
+  const gross = act.reduce((t, s) => t + usageKRW(s), 0);
+  const credUsed = usage.reduce((t, s) => t + (sameMonth(s) ? krw(num(s.creditUsed), s.currency) : 0), 0);
+  let soonest = null;
+  pre.forEach(s => { const b = num(s.burn); if (b > 0){ const r = creditRun(s); const d = r ? r.days : num(s.remaining) / b * 30; if (!soonest || d < soonest.d) soonest = {d, n:s.name}; } });
+  const uCls = uBudget && uProj > uBudget ? 'crit' : (uBudget && uSpent / uBudget > .8 ? 'warn' : '');
+  $('#subline').textContent = `${NOW.getFullYear()}년 ${NOW.getMonth()+1}월 · 오늘 ${NOW.getDate()}일 / ${DIM}일 · 금액은 원화 월 환산`;
+  $('#kpis').innerHTML = `
+    <div class="kpi"><span class="lab">이번 달 예상 지출</span><span class="val num lead">${fK(total)}</span>
+      <span class="foot">${gross - total >= 1 ? `크레딧 포함 사용 ${fK(gross)} · ` : ''}유료 ${act.length}개${missing ? ` · 금액 미입력 ${missing}개` : ''}</span></div>
+    <div class="kpi"><span class="lab">정기 결제 (월 환산)</span><span class="val num">${fK(fixedSum)}</span>
+      <span class="foot">${fixed.length}개 항목 · 연간 약 ${fK(fixedSum * 12)}</span></div>
+    <div class="kpi"><span class="lab">사용량 과금 · 이번 달</span><span class="val num">${fK(uSpent)}</span>
+      <div class="meter" title="예산 대비 사용"><i class="${uCls}" style="width:${pct(uSpent,uBudget)}%"></i>${uBudget ? `<b style="left:calc(${pct(uProj,uBudget)}% - 1px)"></b>` : ''}</div>
+      <span class="foot">${credUsed ? `크레딧으로 낸 ${fK(credUsed)} 별도 · ` : ''}예산 ${fK(uBudget)} · 월말 예상 ${fK(uProj)}</span></div>
+    <div class="kpi"><span class="lab">선불 크레딧 잔액</span><span class="val num">${fK(preRem)}</span>
+      <span class="foot">${soonest ? `가장 빨리 소진: ${esc(soonest.n)} 약 ${Math.max(0, Math.round(soonest.d))}일` : `${pre.length}개 계정`}</span></div>`;
+}
+
+function renderAlerts(){
+  const all = [];
+  liveServices().forEach(s => alertsFor(s).forEach(a => all.push({...a, s})));
+  const rank = {crit:0, warn:1, info:2};
+  all.sort((x, y) => rank[x.lv] - rank[y.lv]);
+  $('#alertCount').textContent = all.length ? all.length + '건' : '';
+  if (!S.services.length){ $('#alerts').innerHTML = `<div class="empty-ok">서비스를 등록하면 예산 초과, 크레딧 부족, 다가오는 결제를 여기서 알려 드려요.</div>`; return; }
+  $('#alerts').innerHTML = all.length ? all.map(a => `
+    <button class="alert ${a.lv}" data-act="edit" data-id="${esc(a.s.id)}">
+      <span class="dot"></span>
+      <span><div class="t">${esc(a.t)}</div><div class="d">${esc(a.d || '')}</div></span>
+      <span class="who">${esc(a.s.name)}<br>${esc(projName(a.s.projectId))}</span>
+    </button>`).join('') : `<div class="empty-ok">지금은 확인할 항목이 없어요.</div>`;
+}
+
+function renderBars(){
+  const groups = new Map();
+  liveServices().filter(s => !isFree(s)).forEach(s => {
+    const k = projOf(s.projectId) ? s.projectId : '';
+    const g = groups.get(k) || {sum:0, gross:0, n:0, top:null};
+    const v = monthlyKRW(s), u = usageKRW(s); g.sum += v; g.gross += u; if (st(s) === 'active') g.n++;
+    if (!g.top || u > g.top.v) g.top = {v: u, n:s.name};
+    groups.set(k, g);
+  });
+  const rows = [...groups.entries()].sort((a, b) => b[1].gross - a[1].gross || b[1].sum - a[1].sum || b[1].n - a[1].n);
+  const max = Math.max(1, ...rows.map(r => r[1].gross));
+  const total = rows.reduce((t, r) => t + r[1].sum, 0);
+  $('#bars').innerHTML = rows.length ? rows.map(([k, g]) => `
+    <div class="bar-row">
+      <div class="name"><i class="sw" style="background:${projColor(k)}"></i><span>${esc(projName(k))}</span></div>
+      <div class="amt num">${fK(g.sum)}</div>
+      <div class="track" title="연한 막대: 크레딧 포함 사용 · 진한 막대: 실제 지출"><i style="width:${g.gross / max * 100}%;background:${projColor(k)};opacity:.3"></i><i style="width:${g.sum / max * 100}%;background:${projColor(k)}"></i></div>
+      <div class="meta">${g.gross - g.sum >= 1 ? `크레딧 포함 사용 ${fK(g.gross)} · ` : ''}${total ? `전체의 ${Math.round(g.sum / total * 100)}% · ` : ''}유료 ${g.n}개${g.top && g.top.v > 0 ? ' · 가장 큰 항목 ' + esc(g.top.n) : ''}</div>
+    </div>`).join('') : `<div class="empty-ok">유료 서비스가 생기면 프로젝트별 비중이 여기에 표시돼요.</div>`;
+}
+
+function renderFilters(){
+  const used = new Set(liveServices().filter(s => !isFree(s)).map(s => projOf(s.projectId) ? s.projectId : ''));
+  const chips = [{id:'all', name:'전체'}, ...S.projects.filter(p => used.has(p.id)).map(p => ({id:p.id, name:p.name, c:projColor(p.id)}))];
+  if (used.has('')) chips.push({id:'', name:'공통·미지정', c:'var(--c0)'});
+  if (S.f.project !== 'all' && !chips.some(c => c.id === S.f.project)) S.f.project = 'all';
+  $('#projChips').innerHTML = chips.map(c => `<button class="chip" data-act="fproj" data-id="${esc(c.id)}" aria-pressed="${S.f.project === c.id}">${c.c ? `<i class="sw" style="background:${c.c}"></i>` : ''}${esc(c.name)}</button>`).join('');
+}
+
+function stateCell(s){
+  const c = s.currency;
+  if (isFree(s)) return `<span>무료${s.provider ? ' · ' + esc(s.provider) : ''}</span>`;
+  if (noAmount(s)) return `<span style="color:var(--faint)">금액 미입력</span>`;
+  if (s.billing === 'usage'){
+    const b = num(s.budget), sp = num(s.spent), pj = projected(s);
+    const cls = b && sp >= b ? 'crit' : (b && (pj > b || sp / b >= .8) ? 'warn' : '');
+    const cur = sameMonth(s), us = num(s.usage), cu = num(s.creditUsed);
+    if (us > 0 && cu > 0) return `<div class="meter" title="사용액 중 크레딧으로 낸 비율"><i class="credit" style="width:${pct(cu,us)}%"></i></div>
+      <span>${cur ? '사용' : '지난달'} <span class="num">${fM(us,c)}</span> · 크레딧 <span class="num">-${fM(cu,c)}</span> · 청구 <span class="num">${fM(sp,c)}</span></span>`;
+    return `<div class="meter"><i class="${cls}" style="width:${pct(sp,b)}%"></i>${b && cur ? `<b style="left:calc(${pct(pj,b)}% - 1px)"></b>` : ''}</div>
+      <span>${cur ? '사용' : '지난달'} <span class="num">${fM(sp,c)}</span>${b ? ` / 예산 <span class="num">${fM(b,c)}</span>` : ''}${cur && pj !== sp ? ` · 예상 <span class="num">${fM(pj,c)}</span>` : ''}</span>`;
+  }
+  if (s.billing === 'prepaid'){
+    const cr = num(s.credit), r = num(s.remaining), bu = num(s.burn);
+    const cr2 = creditRun(s), ratio = cr ? r / cr : 1, run = cr2 ? cr2.days / 30 : (bu > 0 ? r / bu : null);
+    const paid = creditsOf(s).filter(x => x.kind === 'paid').reduce((t, x) => t + num(x.left), 0), promo = creditsOf(s).filter(x => x.kind !== 'paid').reduce((t, x) => t + num(x.left), 0);
+    const cls = r <= 0 || (run !== null && run < 1) ? 'crit' : (ratio < .2 ? 'warn' : '');
+    return `<div class="meter"><i class="${cls}" style="width:${pct(r,cr)}%"></i></div>
+      <span>잔액 <span class="num">${fM(r,c)}</span>${cr ? ` / <span class="num">${fM(cr,c)}</span>` : ''}${run !== null ? ` · 약 ${run >= 2 ? run.toFixed(1) + '개월' : Math.round(run * 30) + '일'}` : ''}</span>${promo ? `<span class="sub">충전 <span class="num">${fM(paid,c)}</span> · 프로모션 <span class="num">${fM(promo,c)}</span></span>` : ''}`;
+  }
+  if (s.billing === 'yearly') return `<span>연 <span class="num">${fM(num(s.amount),c)}</span> 1회 결제</span>`;
+  return `<span>매월 <span class="num">${fM(num(s.amount),c)}</span></span>`;
+}
+
+function dueCell(s){
+  const dl = daysUntil(s.nextDate);
+  if (dl === null) return `<span style="color:var(--faint)">—</span>`;
+  const cls = dl < 0 || dl <= 2 ? 'crit' : dl <= 7 ? 'warn' : '';
+  const lbl = dl < 0 ? `${-dl}일 지남` : dl === 0 ? '오늘' : `D-${dl}`;
+  return `<span class="num">${esc(s.nextDate.slice(5).replace('-', '.'))}</span><span class="dpill ${cls}">${lbl}</span>`;
+}
+
+function ledgerList(){
+  const q = S.f.q.trim().toLowerCase();
+  const list = liveServices().filter(s => {
+    if (!S.f.free && isFree(s)) return false;
+    if (!S.f.ended && st(s) === 'ended') return false;
+    if (S.f.project !== 'all'){ const k = projOf(s.projectId) ? s.projectId : ''; if (k !== S.f.project) return false; }
+    if (q && !(`${s.name} ${s.provider || ''} ${s.note || ''} ${projName(s.projectId)}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const sorters = {
+    cost: (a, b) => monthlyKRW(b) - monthlyKRW(a) || (isFree(a) - isFree(b)) || a.name.localeCompare(b.name, 'ko'),
+    due: (a, b) => (daysUntil(a.nextDate) ?? 1e9) - (daysUntil(b.nextDate) ?? 1e9),
+    name: (a, b) => a.name.localeCompare(b.name, 'ko')
+  };
+  return list.sort(sorters[S.f.sort]);
+}
+
+function loadingOrEmpty(el, what){
+  if (S.mode === 'gh' && S.failed){ el.innerHTML = `<div class="empty"><strong>GitHub에 연결하면 장부가 보여요</strong>위에서 토큰을 넣어 주세요.</div>`; return true; }
+  if (!(S.got.p && S.got.s) && !S.failed){ el.innerHTML = `<div class="empty"><strong>불러오는 중이에요</strong>잠시만 기다려 주세요.</div>`; return true; }
+  if (what){ el.innerHTML = what; return true; }
+  return false;
+}
+
+function renderLedger(){
+  const el = $('#ledger');
+  if (loadingOrEmpty(el, S.services.length ? '' : `<div class="empty"><strong>아직 등록된 서비스가 없어요</strong>오른쪽 위 <b>+ 서비스</b>로 첫 서비스를 등록하세요.</div>`)) return;
+  const list = ledgerList();
+  const sum = list.reduce((t, s) => t + monthlyKRW(s), 0);
+  el.innerHTML = `
+    <div class="row head"><span>서비스</span><span>분류 · 결제</span><span>예산 · 잔액</span><span style="text-align:right">월 실제 지출</span><span style="text-align:right">다음 결제</span></div>
+    ${list.length ? list.map(s => {
+      const m = monthlyOrig(s);
+      return `<button class="row ${st(s) === 'ended' ? 'ended' : ''}" data-act="edit" data-id="${esc(s.id)}">
+        <div class="svc">
+          <div class="n">${esc(s.name)}${s.isExample ? '<span class="tag ex">예시</span>' : ''}${s.autoSource ? '<span class="tag live" title="청구 화면에서 자동으로 갱신돼요">자동</span>' : ''}${st(s) !== 'active' ? `<span class="tag ${st(s)}">${STATUS[st(s)]}</span>` : ''}</div>
+          <div class="p"><i class="sw" style="background:${projColor(s.projectId)}"></i>${esc(projName(s.projectId))}${s.provider && !isFree(s) ? ' · ' + esc(s.provider) : ''}</div>
+        </div>
+        <div class="kind"><span>${CATS[s.category] || '기타'}</span><span class="b">${BILL[s.billing] || ''}</span></div>
+        <div class="state">${stateCell(s)}</div>
+        <div class="money"><div class="k num">${isFree(s) ? '—' : fK(krw(m, s.currency))}</div>${(() => { const uv = usageValue(s); return !isFree(s) && uv - m >= 0.01 ? `<div class="o num" title="크레딧으로 내는 몫까지 포함한 월 사용 규모">사용 ${fK(krw(uv, s.currency))}</div>` : (s.currency === 'USD' && m ? `<div class="o num">${fM(m,'USD')}</div>` : ''); })()}</div>
+        <div class="due">${dueCell(s)}</div>
+      </button>`;}).join('') : `<div class="empty">조건에 맞는 항목이 없어요. 필터를 바꿔 보세요.</div>`}
+    <div class="ledger-foot"><span>${list.length}개 항목 표시 중${S.f.free ? '' : ' · 무료 서비스는 \'서비스 전체\'에서 볼 수 있어요'}</span><span>표시된 항목 월 환산 합계 <b class="num">${fK(sum)}</b></span></div>`;
+}
+
+/* ---------- services map ---------- */
+function renderServices(){
+  const bills = [['all','전체'],['paid','유료'],['free','무료']];
+  $('#billChips').innerHTML = bills.map(([k, l]) => `<button class="chip" data-act="svbill" data-id="${k}" aria-pressed="${S.sv.bill === k}">${l}</button>`).join('');
+  const ps = $('#svProj');
+  const want = `<option value="all">모든 프로젝트</option>` + S.projects.filter(p => !p.inactive).map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+  if (ps.dataset.sig !== want){ ps.innerHTML = want; ps.dataset.sig = want; }
+  if (S.sv.project !== 'all' && !(projOf(S.sv.project) && projActive(S.sv.project))) S.sv.project = 'all';
+  ps.value = S.sv.project;
+  const el = $('#svGroups');
+  if (loadingOrEmpty(el, S.services.length ? '' : `<div class="empty"><strong>아직 등록된 서비스가 없어요</strong>오른쪽 위 <b>+ 서비스</b>로 추가하세요.</div>`)) return;
+  const q = S.sv.q.trim().toLowerCase();
+  const list = liveServices().filter(s => {
+    if (!S.sv.ended && st(s) === 'ended') return false;
+    if (S.sv.bill === 'free' && !isFree(s)) return false;
+    if (S.sv.bill === 'paid' && isFree(s)) return false;
+    const uses = activeUses(s);
+    if (S.sv.project !== 'all' && !uses.some(u => u.p === S.sv.project)) return false;
+    if (q && !(`${s.name} ${s.provider || ''} ${s.note || ''} ${uses.map(u => projName(u.p) + ' ' + u.why).join(' ')}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const by = {};
+  list.forEach(s => { (by[s.category in CATS ? s.category : 'other'] ||= []).push(s); });
+  const keys = Object.keys(CATS).filter(k => by[k]);
+  el.innerHTML = keys.length ? keys.map(k => {
+    const arr = by[k].sort((a, b) => activeUses(b).length - activeUses(a).length || a.name.localeCompare(b.name, 'ko'));
+    return `<section class="group"><h3>${CATS[k]} <span class="c">${arr.length}</span></h3><div class="cards">${arr.map(svcCard).join('')}</div></section>`;
+  }).join('') : `<div class="empty">조건에 맞는 서비스가 없어요.</div>`;
+}
+function svcCard(s){
+  const uses = activeUses(s);
+  const m = monthlyKRW(s);
+  return `<button class="card ${st(s) === 'ended' ? 'ended' : ''}" data-act="edit" data-id="${esc(s.id)}">
+    <div class="hd"><div style="min-width:0"><div class="nm">${esc(s.name)}</div>${s.provider ? `<div class="pv">${esc(s.provider)}</div>` : ''}</div>
+      <div class="tags">${s.isExample ? '<span class="tag ex">예시</span>' : ''}${s.autoSource ? '<span class="tag live">자동</span>' : ''}<span class="tag ${isFree(s) ? 'free' : 'paid'}">${BILL[s.billing] || ''}</span>${st(s) !== 'active' ? `<span class="tag ${st(s)}">${STATUS[st(s)]}</span>` : ''}</div></div>
+    ${uses.length ? `<div class="uses">${uses.map(u => `<div><i class="sw" style="background:${projColor(u.p)}"></i><b>${esc(projName(u.p))}</b>${u.why ? `<span>${esc(u.why)}</span>` : ''}</div>`).join('')}</div>` : `<div class="uses"><div><span>연결된 프로젝트 없음</span></div></div>`}
+    ${(!isFree(s) || s.note) ? `<div class="ft"><span>${isFree(s) ? '' : (noAmount(s) ? '금액 미입력' : '월 ' + fK(m))}</span><span>${uses.length}개 프로젝트</span></div>` : ''}
+  </button>`;
+}
+
+/* ---------- projects ---------- */
+function renderProjects(){
+  const kinds = [['all','전체'], ...Object.entries(PKIND)].filter(([k]) => k === 'all' || S.projects.some(p => (p.kind || 'company') === k));
+  $('#kindChips').innerHTML = kinds.map(([k, l]) => `<button class="chip" data-act="pkind" data-id="${k}" aria-pressed="${S.pv.kind === k}">${l}${k !== 'all' ? ` <span class="num" style="opacity:.7">${S.projects.filter(p => (p.kind||'company') === k).length}</span>` : ''}</button>`).join('');
+  const el = $('#pcards');
+  if (loadingOrEmpty(el, S.projects.length ? '' : `<div class="empty"><strong>아직 프로젝트가 없어요</strong>오른쪽 위 <b>+ 프로젝트</b>로 추가하세요.</div>`)) return;
+  const order = {live:0, dev:1, ended:2};
+  const list = S.projects.filter(p => S.pv.kind === 'all' || (p.kind || 'company') === S.pv.kind)
+    .sort((a, b) => (!!a.inactive - !!b.inactive) || (order[a.status] ?? 1) - (order[b.status] ?? 1) || (a.order || 0) - (b.order || 0));
+  el.innerHTML = list.map(p => {
+    const svcs = servicesOf(p.id).filter(s => st(s) !== 'ended' || p.status === 'ended');
+    const owned = S.services.filter(s => s.projectId === p.id);
+    const cost = owned.reduce((t, s) => t + monthlyKRW(s), 0);
+    const paidShared = svcs.filter(s => !isFree(s) && s.projectId !== p.id).length;
+    const svSorted = svcs.sort((a, b) => isFree(a) - isFree(b) || a.name.localeCompare(b.name, 'ko'));
+    return `<button class="pcard ${p.inactive ? 'off' : ''}" data-act="viewProject" data-id="${esc(p.id)}">
+      <div class="hd"><i class="sw" style="background:${projColor(p.id)}"></i><span class="nm">${esc(p.name)}</span>
+        <span class="tag">${PKIND[p.kind || 'company']}</span>${p.status ? `<span class="tag ${p.status}">${PSTAT[p.status]}</span>` : ''}${p.inactive ? '<span class="tag off">비활성</span>' : ''}${p.isExample ? '<span class="tag ex">예시</span>' : ''}</div>
+      ${p.desc ? `<div class="ds">${esc(p.desc)}</div>` : ''}
+      <dl>
+        ${p.runsOn ? `<dt>실행 위치</dt><dd>${esc(p.runsOn)}</dd>` : ''}
+        ${p.repo ? `<dt>저장소</dt><dd class="num" style="font-size:12px">${esc(p.repo)}</dd>` : ''}
+        ${p.url ? `<dt>주소</dt><dd class="num" style="font-size:12px">${esc(p.url.replace(/^https?:\/\//,''))}</dd>` : ''}
+      </dl>
+      ${svSorted.length ? `<div class="svchips">${svSorted.map(s => `<span class="svchip ${isFree(s) ? '' : 'paid'}">${esc(s.name)}</span>`).join('')}</div>` : `<div class="hint">연결된 서비스가 없어요</div>`}
+      <div class="ft"><span>서비스 ${svcs.length}개 · 유료 ${svcs.filter(s => !isFree(s)).length}개</span><span>${p.inactive ? '비용 계산에서 빠짐' : (cost ? '직접 비용 월 ' + fK(cost) : (paidShared ? '공통 비용 사용' : '직접 비용 없음'))}</span></div>
+    </button>`;
+  }).join('');
+}
+
+/* ---------- service drawer ---------- */
+function sparkSVG(h, cur){
+  const months = [];
+  for (let i = 5; i >= 0; i--){ const d = new Date(NOW.getFullYear(), NOW.getMonth() - i, 1); months.push(ym(d)); }
+  const vals = months.map(m => num((h || {})[m]));
+  if (!vals.some(v => v > 0)) return '';
+  const max = Math.max(...vals), W = 420, H = 110, bw = 44, gap = (W - bw * 6) / 5;
+  const bars = vals.map((v, i) => {
+    const bh = max ? v / max * 62 : 0, x = i * (bw + gap), y = 78 - bh;
+    return `<rect x="${x}" y="${y}" width="${bw}" height="${Math.max(bh, v ? 2 : 0)}" rx="3" fill="${i === 5 ? 'var(--accent)' : 'var(--line-strong)'}"/>
+      <text x="${x + bw/2}" y="${Math.max(10, y - 4)}" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${v ? (cur === 'USD' ? '$' + Math.round(v) : Math.round(v/1000) + 'k') : ''}</text>
+      <text x="${x + bw/2}" y="96" text-anchor="middle" font-size="10.5" fill="var(--muted)">${+months[i].slice(5)}월</text>`;
+  }).join('');
+  return `<div class="f"><span class="l">월별 사용액 (최근 6개월)</span><svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="월별 사용액">${bars}</svg></div>`;
+}
+
+function openDrawer(id){
+  const s = id ? S.services.find(x => x.id === id) : null;
+  if (id && !s) return;
+  const presetP = S.view === 'services' && S.sv.project !== 'all' ? S.sv.project : (S.f.project !== 'all' ? S.f.project : '');
+  const v = s || {billing:'free', currency:'USD', category:'ai', status:'active', projectId: presetP, usedBy: presetP ? [{p:presetP, why:''}] : []};
+  S.drawer = {kind:'svc', id: s ? s.id : null, history: s?.history || {}};
+  const ro = !S.canWrite ? 'disabled' : '';
+  const uses = new Map((Array.isArray(v.usedBy) ? v.usedBy : []).map(u => [u.p, u.why || '']));
+  const projOpts = [`<option value="">공통·미지정</option>`, ...S.projects.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`)].join('');
+  $('#overlay').innerHTML = `
+    <div class="scrim" data-act="close"></div>
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+      <header><h3 id="dTitle">${s ? esc(s.name) : '새 서비스'}</h3><button class="btn ghost" data-act="close">닫기</button></header>
+      <form class="body" id="svcForm" autocomplete="off">
+        <div class="grid2">
+          <div class="f"><label for="f_name">서비스 이름</label><input id="f_name" required maxlength="80" placeholder="예: Claude API" value="${esc(v.name)}" ${ro}></div>
+          <div class="f"><label for="f_provider">제공사 / 플랜</label><input id="f_provider" maxlength="120" placeholder="예: Pro 플랜, 서울 리전" value="${esc(v.provider)}" ${ro}></div>
+        </div>
+        <div class="grid2">
+          <div class="f"><label for="f_category">분류</label><select id="f_category" ${ro}>${Object.entries(CATS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div>
+          <div class="f"><label for="f_status">상태</label><select id="f_status" ${ro}>${Object.entries(STATUS).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div>
+        </div>
+        <div class="f"><span class="l">사용하는 프로젝트와 용도</span>
+          <div class="uselist">${S.projects.length ? S.projects.map(p => `
+            <div class="useitem">
+              <input type="checkbox" id="u_${esc(p.id)}" data-use="${esc(p.id)}" ${uses.has(p.id) || v.projectId === p.id ? 'checked' : ''} ${ro}>
+              <label for="u_${esc(p.id)}"><i class="sw" style="background:${projColor(p.id)}"></i><span>${esc(p.name)}${p.inactive ? ' (비활성)' : ''}</span></label>
+              <input type="text" id="w_${esc(p.id)}" data-why="${esc(p.id)}" maxlength="80" placeholder="무엇에 쓰나요" value="${esc(uses.get(p.id) || '')}" ${ro}>
+            </div>`).join('') : `<div class="hint">프로젝트 탭에서 프로젝트를 먼저 추가하세요.</div>`}</div>
+        </div>
+        <div class="f"><span class="l">결제 방식</span>
+          <div class="seg" role="radiogroup">${Object.entries(BILL).map(([k, l]) => `<label><input type="radio" name="f_billing" id="f_billing_${k}" value="${k}" ${v.billing === k ? 'checked' : ''} ${ro}><span>${l}</span></label>`).join('')}</div>
+        </div>
+        <div class="box" data-bill="monthly yearly usage prepaid">
+          <div class="grid2">
+            <div class="f"><label for="f_project">비용을 묶을 프로젝트</label><select id="f_project" ${ro}>${projOpts}</select>
+              <span class="hint">여러 프로젝트가 같이 쓰면 공통으로 두세요.</span></div>
+            <div class="f"><label for="f_currency">통화</label><select id="f_currency" ${ro}><option value="USD">USD ($)</option><option value="KRW">KRW (₩)</option></select></div>
+          </div>
+          <div class="grid2">
+            <div class="f" data-bill="monthly yearly"><label for="f_amount" id="lab_amount">금액</label><input id="f_amount" class="num" inputmode="decimal" value="${esc(v.amount || '')}" ${ro}></div>
+            <div class="f" data-bill="usage"><label for="f_budget">월 예산</label><input id="f_budget" class="num" inputmode="decimal" value="${esc(v.budget || '')}" ${ro}></div>
+          </div>
+          <div class="grid2" data-bill="usage">
+            <div class="f"><label for="f_usage">이번 달 사용량 (크레딧 차감 전)</label><input id="f_usage" class="num" inputmode="decimal" value="${esc(s && !sameMonth(s) ? '' : (v.usage || ''))}" ${ro}></div>
+            <div class="f"><label for="f_creditUsed">그중 크레딧으로 낸 금액</label><input id="f_creditUsed" class="num" inputmode="decimal" value="${esc(s && !sameMonth(s) ? '' : (v.creditUsed || ''))}" ${ro}></div>
+          </div>
+          <div class="f" data-bill="usage"><label for="f_spent">이번 달 실제 청구액</label><input id="f_spent" class="num" inputmode="decimal" value="${esc(s && !sameMonth(s) ? '' : (v.spent || (num(v.usage) ? 0 : '')))}" placeholder="${s && !sameMonth(s) && num(v.spent) ? '지난달 ' + esc(v.spent) + ' · 이번 달 값을 입력하세요' : '콘솔의 이번 달 누적 금액'}" ${ro}>
+            <span class="hint">저장한 날짜 기준으로 월말 예상액을 계산하고, 월별 기록에 남겨요.</span></div>
+          <div class="grid2" data-bill="prepaid">
+            <div class="f"><label for="f_credit">충전 총액</label><input id="f_credit" class="num" inputmode="decimal" value="${esc(v.credit || '')}" ${ro}></div>
+            <div class="f"><label for="f_remaining">남은 잔액</label><input id="f_remaining" class="num" inputmode="decimal" value="${esc(v.remaining || '')}" ${ro}></div>
+          </div>
+          <div class="f" data-bill="prepaid"><label for="f_burn">월 평균 소진액</label><input id="f_burn" class="num" inputmode="decimal" value="${esc(v.burn || '')}" ${ro}></div>
+          <div class="grid2">
+            <div class="f"><label for="f_next" id="lab_next">다음 결제일</label><input id="f_next" type="date" value="${esc(v.nextDate ?? '')}" ${ro}></div>
+            <div class="f"><label for="f_payer">결제 수단 · 담당</label><input id="f_payer" maxlength="80" placeholder="예: 법인카드(재무팀)" value="${esc(v.payer)}" ${ro}></div>
+          </div>
+          <span class="hint">카드 번호나 API 키는 적지 마세요. 이 장부는 공유받은 사람이 읽을 수 있어요.</span>
+        </div>
+        ${s && creditsOf(s).length ? `<div class="f"><span class="l">남은 크레딧</span><div class="creds">${creditsOf(s).sort((a, b) => (daysUntil(a.expires) ?? 1e9) - (daysUntil(b.expires) ?? 1e9)).map(cd => { const dl = daysUntil(cd.expires); return `<div><span>${esc(cd.name || '크레딧')}${cd.note ? `<div class="x">${esc(cd.note)}</div>` : ''}</span><span class="num">${fM(num(cd.left), s.currency)}${num(cd.total) ? `<span class="x"> / ${fM(num(cd.total), s.currency)}</span>` : ''}</span><span class="x">${cd.expires ? `${esc(cd.expires)}${dl !== null && dl >= 0 ? ` · D-${dl}` : ''}` : '만료 없음'}</span></div>`; }).join('')}</div>${(() => { const r = creditRun(s); return r ? `<span class="hint">월 ${fM(num(s.burn), s.currency)}씩 쓰면 약 ${Math.round(r.days)}일 버텨요${r.lost >= 1 ? ` · 그 사이 ${fM(Math.round(r.lost), s.currency)}은 쓰기 전에 만료돼요` : ''}.</span>` : ''; })()}</div>` : ''}
+        ${s && s.billing === 'usage' ? sparkSVG(Object.values(s.usageHistory || {}).some(x => num(x) > 0) ? s.usageHistory : s.history, s.currency) : ''}
+        <div class="f"><label for="f_url">관리 콘솔 주소</label><input id="f_url" type="url" maxlength="300" placeholder="https://" value="${esc(v.url)}" ${ro}>
+          ${safeUrl(v.url) ? `<a class="hint" href="${esc(v.url)}" target="_blank" rel="noopener">콘솔 열기 ↗</a>` : ''}</div>
+        <div class="f"><label for="f_note">메모</label><textarea id="f_note" maxlength="1000" placeholder="키를 넣어 둔 곳(환경변수 이름), 해지 방법, 무료 한도 등" ${ro}>${esc(v.note)}</textarea></div>
+        ${s && s.autoSource ? `<div class="hint">자동 갱신: ${esc(s.autoSource)}${s.autoAt ? ' · ' + esc(new Date(s.autoAt).toLocaleString('ko-KR')) : ''}. 사용액은 다음 자동 갱신 때 다시 덮어써져요.</div>` : ''}
+        ${s && s.updatedAt ? `<div class="hint">마지막 갱신 ${new Date(s.updatedAt).toLocaleString('ko-KR')}</div>` : ''}
+      </form>
+      <footer>
+        <span id="delArea">${s && S.canWrite ? `<button class="btn danger" type="button" data-act="askDel">삭제</button>` : ''}</span>
+        <span class="r"><button class="btn" type="button" data-act="close">취소</button>${S.canWrite ? `<button class="btn primary" type="submit" form="svcForm" id="saveBtn">저장</button>` : ''}</span>
+      </footer>
+    </aside>`;
+  $('#f_project').value = projOf(v.projectId) ? v.projectId : '';
+  $('#f_category').value = v.category in CATS ? v.category : 'other';
+  $('#f_currency').value = v.currency || 'USD';
+  $('#f_status').value = st(v);
+  syncBilling(); syncUses();
+  const form = $('#svcForm');
+  form.addEventListener('change', e => { if (e.target.name === 'f_billing') syncBilling(); if (e.target.dataset.use) syncUses(); });
+  form.addEventListener('submit', onSave);
+  setTimeout(() => $('#f_name')?.focus(), 30);
+}
+function curBilling(){ return document.querySelector('input[name="f_billing"]:checked')?.value || 'free'; }
+function syncBilling(){
+  const b = curBilling();
+  document.querySelectorAll('#svcForm [data-bill]').forEach(el => { el.hidden = !el.dataset.bill.split(' ').includes(b); });
+  $('#lab_amount').textContent = b === 'yearly' ? '연 금액' : '월 금액';
+  $('#lab_next').textContent = b === 'prepaid' ? '크레딧 만료일' : b === 'yearly' ? '다음 갱신일' : b === 'usage' ? '다음 청구일' : '다음 결제일';
+}
+function syncUses(){ document.querySelectorAll('[data-use]').forEach(cb => { const w = document.querySelector(`[data-why="${CSS.escape(cb.dataset.use)}"]`); if (w) w.disabled = !cb.checked || !S.canWrite; }); }
+function closeDrawer(){ S.drawer = null; $('#overlay').innerHTML = ''; }
+
+async function onSave(e){
+  e.preventDefault();
+  if (!S.db || !S.canWrite) return;
+  const name = $('#f_name').value.trim();
+  if (!name){ $('#f_name').focus(); return; }
+  const billing = curBilling();
+  const usedBy = [...document.querySelectorAll('[data-use]')].filter(cb => cb.checked).map(cb => ({p: cb.dataset.use, why: (document.querySelector(`[data-why="${CSS.escape(cb.dataset.use)}"]`)?.value || '').trim()}));
+  let projectId = $('#f_project').value;
+  if (billing !== 'free' && !projectId && usedBy.length === 1) projectId = usedBy[0].p;
+  const body = {
+    name, provider: $('#f_provider').value.trim(), category: $('#f_category').value, status: $('#f_status').value,
+    billing, usedBy, projectId: billing === 'free' ? (usedBy.length === 1 ? usedBy[0].p : '') : projectId,
+    currency: $('#f_currency').value,
+    amount: num($('#f_amount').value), budget: num($('#f_budget').value), spent: num($('#f_spent').value),
+    usage: num($('#f_usage').value), creditUsed: num($('#f_creditUsed').value),
+    credit: num($('#f_credit').value), remaining: num($('#f_remaining').value), burn: num($('#f_burn').value),
+    nextDate: billing === 'free' ? '' : ($('#f_next').value || ''), payer: $('#f_payer').value.trim(), url: $('#f_url').value.trim(), note: $('#f_note').value.trim(),
+    history: {...(S.drawer.history || {})}, updatedAt: Date.now()
+  };
+  const old = S.drawer.id ? S.services.find(x => x.id === S.drawer.id) : null;
+  if (billing === 'usage' && old && !sameMonth(old) && $('#f_spent').value.trim() === ''){ body.spent = num(old.spent); body.updatedAt = old.updatedAt || Date.now(); }
+  else if (billing === 'usage' && $('#f_spent').value.trim() !== '') body.history[YM] = body.spent;
+  if (old && old.autoSource){ body.autoSource = old.autoSource; if (old.autoAt) body.autoAt = old.autoAt; }
+  if (old && Array.isArray(old.credits)) body.credits = old.credits;
+  body.usageHistory = {...(old?.usageHistory || {})};
+  if (billing === 'usage' && $('#f_usage').value.trim() !== '') body.usageHistory[YM] = body.usage;
+  if (old && !sameMonth(old) && $('#f_usage').value.trim() === '' && body.updatedAt === old.updatedAt){ body.usage = num(old.usage); body.creditUsed = num(old.creditUsed); }
+  { const uk = Object.keys(body.usageHistory).sort(); while (uk.length > 12) delete body.usageHistory[uk.shift()]; }
+  const keys = Object.keys(body.history).sort(); while (keys.length > 12) delete body.history[keys.shift()];
+  const btn = $('#saveBtn'); btn.disabled = true; btn.textContent = '저장 중…';
+  try {
+    const ref = S.drawer.id ? S.db.collection('services').doc(S.drawer.id) : S.db.collection('services').doc();
+    await ref.set(body);
+    closeDrawer(); toast('저장했어요');
+  } catch (err){
+    btn.disabled = false; btn.textContent = '저장';
+    toast(err?.code === 'invalid_argument' ? '저장 권한이 없어요' : err?.code === 'quota_exceeded' ? '저장 공간이 가득 찼어요' : '저장하지 못했어요. 잠시 후 다시 눌러 주세요');
+    if (err?.code === 'invalid_argument'){ S.canWrite = false; render(); }
+  }
+}
+
+/* ---------- project architecture view ---------- */
+// 시각 폭: 한글·전각은 2, 나머지는 1로 세어 칸에 맞게 자른다
+function clip(str, units){
+  let u = 0, out = '';
+  for (const ch of String(str || '')){
+    const w = /[ᄀ-ᇿ　-鿿가-힯＀-￯]/.test(ch) ? 2 : 1;
+    if (u + w > units){ return out.replace(/\s+$/, '') + '…'; }
+    u += w; out += ch;
+  }
+  return out;
+}
+function archSVG(p){
+  const svcs = servicesOf(p.id).filter(s => st(s) !== 'ended' || p.status === 'ended');
+  const why = s => (usesOf(s).find(u => u.p === p.id) || {}).why || '';
+  const people = [], host = [], dev = [], right = {};
+  if (p.url) people.push({t:'사용자 (웹)', d:p.url.replace(/^https?:\/\//, '').replace(/\/$/, ''), kind:'user'});
+  svcs.forEach(s => {
+    const row = {t:s.name, d:why(s) || s.provider || '', paid:!isFree(s), off:st(s) !== 'active'};
+    if (s.category === 'msg') people.push(row);
+    else if (s.category === 'server') host.push(row);
+    else if (s.category === 'dev') dev.push(row);
+    else (right[s.category in CATS ? s.category : 'other'] ||= []).push(row);
+  });
+  if (!people.length) people.push({t:'운영자', d:'직접 실행하거나 예약으로 실행', kind:'user'});
+  const W = 760, CW = 214, XL = 0, XC = 273, XR = W - CW, HEAD = 28, ROW = 38, PAD = 8, GAP = 18;
+  const boxH = n => HEAD + Math.max(1, n) * ROW + PAD;
+  const leftCol = [{title:'사람·채널', rows:people, tone:'plain'}];
+  const centerCol = [{title:'앱', rows:[{t:p.name, d:p.runsOn || '실행 위치 미입력', kind:'app'}], tone:'app'}];
+  if (host.length) centerCol.push({title:'호스팅·서버', rows:host, tone:'plain', link:'deploy'});
+  if (dev.length) centerCol.push({title:'개발·배포', rows:dev, tone:'plain', link:'deploy'});
+  const rightCol = Object.keys(CATS).filter(k => right[k]).map(k => ({title:CATS[k], rows:right[k], tone:'plain'}));
+  if (!rightCol.length) rightCol.push({title:'외부 API', rows:[{t:'연결된 외부 API 없음', d:'', kind:'none'}], tone:'plain'});
+  const colH = col => col.reduce((t, b) => t + boxH(b.rows.length), 0) + GAP * (col.length - 1);
+  const H = Math.max(colH(leftCol), colH(centerCol), colH(rightCol)) + 8;
+  const place = (col, x) => { let y = (H - colH(col)) / 2; col.forEach(b => { b.x = x; b.y = Math.round(y); b.h = boxH(b.rows.length); y += b.h + GAP; }); };
+  place(leftCol, XL); place(centerCol, XC); place(rightCol, XR);
+  const app = centerCol[0];
+  const units = Math.floor((CW - 34) / 6.6);
+  const box = b => {
+    const isApp = b.tone === 'app';
+    const rows = b.rows.map((r, i) => {
+      const y = b.y + HEAD + i * ROW;
+      const dot = r.kind ? '' : `<circle cx="${b.x + 14}" cy="${y + 14}" r="3.6" fill="${r.paid ? 'var(--accent)' : 'none'}" stroke="${r.paid ? 'var(--accent)' : 'var(--muted)'}" stroke-width="1.4"/>`;
+      const tx = r.kind ? b.x + 12 : b.x + 25;
+      const u = r.kind ? units + 2 : units;
+      return `${i ? `<line x1="${b.x + 10}" x2="${b.x + CW - 10}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/>` : ''}${dot}
+        <text x="${tx}" y="${y + 18}" font-size="${isApp ? 13.5 : 12.5}" font-weight="${isApp ? 700 : 600}" fill="${r.off ? 'var(--faint)' : 'var(--fg)'}">${esc(clip(r.t, isApp ? u - 2 : u))}</text>
+        ${r.d ? `<text x="${tx}" y="${y + 32}" font-size="11" fill="var(--muted)">${esc(clip(r.d, u + 3))}</text>` : ''}`;
+    }).join('');
+    return `<g><rect x="${b.x}" y="${b.y}" width="${CW}" height="${b.h}" rx="9" fill="var(--surface)" stroke="${isApp ? 'var(--accent)' : 'var(--line-strong)'}" stroke-width="${isApp ? 1.6 : 1}"/>
+      <path d="M${b.x + 1} ${b.y + HEAD} V${b.y + 9} Q${b.x + 1} ${b.y + 1} ${b.x + 9} ${b.y + 1} H${b.x + CW - 9} Q${b.x + CW - 1} ${b.y + 1} ${b.x + CW - 1} ${b.y + 9} V${b.y + HEAD} Z" fill="${isApp ? 'var(--accent-soft)' : 'var(--sunk)'}"/>
+      <text x="${b.x + 12}" y="${b.y + 18.5}" font-size="11" font-weight="600" letter-spacing=".04em" fill="${isApp ? 'var(--accent)' : 'var(--muted)'}">${esc(b.title)}</text>${rows}</g>`;
+  };
+  const curve = (x1, y1, x2, y2, dashed) => `<path d="M${x1} ${y1} C${x1 + 30} ${y1}, ${x2 - 30} ${y2}, ${x2 - 6} ${y2}" fill="none" stroke="var(--muted)" stroke-width="1.3" ${dashed ? 'stroke-dasharray="4 4"' : ''} marker-end="url(#ah)"/>`;
+  const appMid = app.y + app.h / 2;
+  const edges = [];
+  leftCol.forEach(b => edges.push(curve(b.x + CW, b.y + b.h / 2, app.x, appMid)));
+  rightCol.forEach((b, i) => { const y1 = app.y + 14 + (app.h - 28) * ((i + 1) / (rightCol.length + 1)); edges.push(curve(app.x + CW, y1, b.x, b.y + Math.min(b.h / 2, HEAD + ROW / 2))); });
+  centerCol.slice(1).forEach((b, i) => {
+    const prev = centerCol[i];
+    edges.push(`<line x1="${b.x + CW / 2}" y1="${prev.y + prev.h}" x2="${b.x + CW / 2}" y2="${b.y - 6}" stroke="var(--muted)" stroke-width="1.3" stroke-dasharray="4 4" marker-end="url(#ah)"/>`);
+  });
+  return `<svg viewBox="-2 -2 ${W + 4} ${H + 4}" role="img" aria-label="${esc(p.name)} 구조도" font-family="IBM Plex Sans KR, -apple-system, sans-serif">
+    <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--muted)"/></marker></defs>
+    ${edges.join('')}${[...leftCol, ...centerCol, ...rightCol].map(box).join('')}</svg>`;
+}
+
+function openProjectView(id){
+  const p = projOf(id); if (!p) return;
+  S.drawer = {kind:'pview', id};
+  const svcs = servicesOf(p.id);
+  const cost = S.services.filter(s => s.projectId === p.id).reduce((t, s) => t + monthlyKRW(s), 0);
+  $('#overlay').innerHTML = `
+    <div class="scrim" data-act="close"></div>
+    <aside class="drawer wide" role="dialog" aria-modal="true" aria-labelledby="pvTitle">
+      <header><div class="pv-head"><i class="sw" style="background:${projColor(p.id)}"></i><h3 id="pvTitle">${esc(p.name)}</h3>
+        <span class="tag">${PKIND[p.kind || 'company']}</span>${p.status ? `<span class="tag ${p.status}">${PSTAT[p.status]}</span>` : ''}${p.inactive ? '<span class="tag off">비활성</span>' : ''}</div>
+        <button class="btn ghost" data-act="close">닫기</button></header>
+      <div class="body">
+        ${p.desc ? `<div style="color:var(--muted)">${esc(p.desc)}</div>` : ''}
+        <div class="arch-wrap">${archSVG(p)}</div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>유료</span><span><i style="border:1.4px solid var(--muted)"></i>무료</span><span>점선: 배포·호스팅 관계</span><span>장부의 서비스 연결로 자동으로 그려요</span></div>
+        <dl class="pv-facts">
+          ${p.runsOn ? `<dt>실행 위치</dt><dd>${esc(p.runsOn)}</dd>` : ''}
+          ${p.repo ? `<dt>저장소</dt><dd class="num" style="font-size:12.5px">${esc(p.repo)}</dd>` : ''}
+          ${safeUrl(p.url) ? `<dt>주소</dt><dd><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.url.replace(/^https?:\/\//, ''))} ↗</a></dd>` : ''}
+          <dt>서비스</dt><dd>${svcs.length}개 · 유료 ${svcs.filter(s => !isFree(s)).length}개</dd>
+          <dt>직접 비용</dt><dd>${p.inactive ? '비활성이라 비용 계산에서 빠져 있어요' : (cost ? '월 ' + fK(cost) : '없음 (공통 비용은 서비스별로 확인)')}</dd>
+          ${p.note ? `<dt>메모</dt><dd>${esc(p.note)}</dd>` : ''}
+        </dl>
+      </div>
+      <footer><span class="hint">서비스 연결은 각 서비스를 눌러 바꿀 수 있어요</span>
+        <span class="r">${S.canWrite ? `<button class="btn primary" type="button" data-act="editProject" data-id="${esc(p.id)}">프로젝트 편집</button>` : ''}</span></footer>
+    </aside>`;
+}
+
+/* ---------- project drawer ---------- */
+function openProject(id){
+  const p = id ? projOf(id) : null;
+  if (id && !p) return;
+  const v = p || {kind:'company', status:'live', color: nextColor()};
+  S.drawer = {kind:'proj', id: p ? p.id : null};
+  const ro = !S.canWrite ? 'disabled' : '';
+  const refs = p ? S.services.filter(s => s.projectId === p.id || usesOf(s).some(u => u.p === p.id)).length : 0;
+  $('#overlay').innerHTML = `
+    <div class="scrim" data-act="close"></div>
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="pTitle">
+      <header><h3 id="pTitle">${p ? esc(p.name) : '새 프로젝트'}</h3><button class="btn ghost" data-act="close">닫기</button></header>
+      <form class="body" id="projForm" autocomplete="off">
+        <div class="f"><label for="p_name">이름</label><input id="p_name" required maxlength="60" value="${esc(v.name)}" ${ro}></div>
+        <div class="f"><label for="p_desc">무엇을 하나요</label><input id="p_desc" maxlength="160" value="${esc(v.desc)}" placeholder="한 줄 설명" ${ro}></div>
+        <div class="grid2">
+          <div class="f"><label for="p_kind">구분</label><select id="p_kind" ${ro}>${Object.entries(PKIND).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div>
+          <div class="f"><label for="p_status">상태</label><select id="p_status" ${ro}>${Object.entries(PSTAT).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div>
+        </div>
+        <label class="check" for="p_inactive" style="font-size:13px;color:var(--fg)"><input type="checkbox" id="p_inactive" ${v.inactive ? 'checked' : ''} ${ro}> 비활성화 <span class="hint">· 프로젝트 목록에만 남기고 비용 계산과 서비스 전체에서 빼요</span></label>
+        <div class="f"><label for="p_runs">실행 위치</label><input id="p_runs" maxlength="160" value="${esc(v.runsOn)}" placeholder="예: Vercel, 사내 Mac(launchd), GCP VM" ${ro}></div>
+        <div class="grid2">
+          <div class="f"><label for="p_repo">저장소</label><input id="p_repo" maxlength="160" value="${esc(v.repo)}" placeholder="조직/레포" ${ro}></div>
+          <div class="f"><label for="p_url">서비스 주소</label><input id="p_url" type="url" maxlength="300" value="${esc(v.url)}" placeholder="https://" ${ro}>
+            ${safeUrl(v.url) ? `<a class="hint" href="${esc(v.url)}" target="_blank" rel="noopener">열기 ↗</a>` : ''}</div>
+        </div>
+        <div class="f"><span class="l">색</span><div class="swpick">${[1,2,3,4,5,6].map(c => `<label><input type="radio" name="p_color" value="${c}" ${+(v.color || 1) === c ? 'checked' : ''} ${ro} aria-label="색 ${c}"><i class="sw" style="background:var(--c${c})"></i></label>`).join('')}</div></div>
+        <div class="f"><label for="p_note">메모</label><textarea id="p_note" maxlength="1000" ${ro}>${esc(v.note)}</textarea></div>
+      </form>
+      <footer>
+        <span id="delArea">${p && S.canWrite ? `<button class="btn danger" type="button" data-act="askDelP" ${refs ? `disabled title="이 프로젝트를 쓰는 서비스 ${refs}개에서 먼저 빼 주세요"` : ''}>삭제</button>${refs ? `<span class="hint" style="margin-left:6px">서비스 ${refs}개가 연결돼 있어요</span>` : ''}` : ''}</span>
+        <span class="r"><button class="btn" type="button" data-act="close">취소</button>${S.canWrite ? `<button class="btn primary" type="submit" form="projForm" id="saveP">저장</button>` : ''}</span>
+      </footer>
+    </aside>`;
+  $('#p_kind').value = v.kind || 'company';
+  $('#p_status').value = v.status || 'live';
+  $('#projForm').addEventListener('submit', onSaveProject);
+  setTimeout(() => $('#p_name')?.focus(), 30);
+}
+function nextColor(){ const used = S.projects.map(p => p.color || 1); for (let c = 1; c <= 6; c++) if (!used.includes(c)) return c; return (S.projects.length % 6) + 1; }
+async function onSaveProject(e){
+  e.preventDefault();
+  if (!S.db || !S.canWrite) return;
+  const name = $('#p_name').value.trim(); if (!name){ $('#p_name').focus(); return; }
+  const old = S.drawer.id ? projOf(S.drawer.id) : null;
+  const body = {name, desc: $('#p_desc').value.trim(), kind: $('#p_kind').value, status: $('#p_status').value, runsOn: $('#p_runs').value.trim(),
+    repo: $('#p_repo').value.trim(), url: $('#p_url').value.trim(), note: $('#p_note').value.trim(),
+    inactive: $('#p_inactive').checked,
+    color: +(document.querySelector('input[name="p_color"]:checked')?.value || 1), order: old?.order ?? Date.now()};
+  const btn = $('#saveP'); btn.disabled = true; btn.textContent = '저장 중…';
+  try {
+    const ref = S.drawer.id ? S.db.collection('projects').doc(S.drawer.id) : S.db.collection('projects').doc();
+    await ref.set(body); closeDrawer(); toast('저장했어요');
+  } catch { btn.disabled = false; btn.textContent = '저장'; toast('저장하지 못했어요'); }
+}
+
+/* ---------- example cleanup ---------- */
+async function clearExamples(){
+  const svc = S.services.filter(s => s.isExample);
+  const keep = new Set(); S.services.filter(s => !s.isExample).forEach(s => usesOf(s).forEach(u => keep.add(u.p)));
+  S.services.filter(s => !s.isExample).forEach(s => s.projectId && keep.add(s.projectId));
+  const proj = S.projects.filter(p => p.isExample && !keep.has(p.id));
+  try {
+    for (const s of svc) await S.db.collection('services').doc(s.id).delete();
+    for (const p of proj) await S.db.collection('projects').doc(p.id).delete();
+    toast('예시를 지웠어요');
+  } catch { toast('일부를 지우지 못했어요. 다시 시도해 주세요'); }
+}
+
+function toast(msg){
+  const h = $('#toastHost'); h.innerHTML = `<div class="toast" role="status">${esc(msg)}</div>`;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { h.innerHTML = ''; }, 2400);
+}
+
+/* ---------- routing & events ---------- */
+function setView(v, push){
+  if (!VIEWS.includes(v)) v = 'costs';
+  S.view = v;
+  if (push){ try { history.replaceState(null, '', '#' + v); } catch {} }
+  render();
+}
+window.addEventListener('hashchange', () => setView(location.hash.slice(1), false));
+
+document.addEventListener('click', async e => {
+  const t = e.target.closest('[data-act]'); if (!t) return;
+  const act = t.dataset.act, id = t.dataset.id;
+  if (act === 'tab') setView(id, true);
+  else if (act === 'edit') openDrawer(id);
+  else if (act === 'new') openDrawer(null);
+  else if (act === 'editProject') openProject(id);
+  else if (act === 'viewProject') openProjectView(id);
+  else if (act === 'newProject') openProject(null);
+  else if (act === 'close') closeDrawer();
+  else if (act === 'fproj'){ S.f.project = id; render(); }
+  else if (act === 'svbill'){ S.sv.bill = id; render(); }
+  else if (act === 'pkind'){ S.pv.kind = id; render(); }
+  else if (act === 'askDel' || act === 'askDelP'){
+    const yes = act === 'askDel' ? 'del' : 'delP';
+    $('#delArea').innerHTML = `<span class="confirm">정말 삭제할까요? <button class="btn danger" type="button" data-act="${yes}">삭제</button><button class="btn ghost" type="button" data-act="noDel">아니요</button></span>`;
+  }
+  else if (act === 'noDel'){ S.drawer?.kind === 'proj' ? openProject(S.drawer.id) : openDrawer(S.drawer.id); }
+  else if (act === 'del' && S.drawer?.id){
+    try { await S.db.collection('services').doc(S.drawer.id).delete(); closeDrawer(); toast('삭제했어요'); } catch { toast('삭제하지 못했어요'); }
+  }
+  else if (act === 'delP' && S.drawer?.id){
+    try { await S.db.collection('projects').doc(S.drawer.id).delete(); closeDrawer(); toast('프로젝트를 삭제했어요'); } catch { toast('삭제하지 못했어요'); }
+  }
+  else if (act === 'clearEx'){
+    $('#exArea').innerHTML = `<span class="confirm" style="color:var(--fg)">예시 항목을 모두 지울까요? <button class="btn danger" data-act="clearExYes">지우기</button><button class="btn ghost" data-act="clearExNo">아니요</button></span>`;
+  }
+  else if (act === 'ghOut'){ ['ledger.token', 'ledger.repo', 'ledger.login'].forEach(k => lsSet(k, '')); location.reload(); }
+  else if (act === 'clearExNo') renderNotices();
+  else if (act === 'clearExYes') clearExamples();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.drawer) closeDrawer(); });
+$('#sortSel').addEventListener('change', e => { S.f.sort = e.target.value; renderLedger(); });
+let qT; $('#q').addEventListener('input', e => { clearTimeout(qT); qT = setTimeout(() => { S.f.q = e.target.value; renderLedger(); }, 120); });
+$('#showEnded').addEventListener('change', e => { S.f.ended = e.target.checked; renderLedger(); });
+$('#showFree').addEventListener('change', e => { S.f.free = e.target.checked; renderLedger(); });
+let sT; $('#svQ').addEventListener('input', e => { clearTimeout(sT); sT = setTimeout(() => { S.sv.q = e.target.value; renderServices(); }, 120); });
+$('#svProj').addEventListener('change', e => { S.sv.project = e.target.value; renderServices(); });
+$('#svEnded').addEventListener('change', e => { S.sv.ended = e.target.checked; renderServices(); });
+$('#fxInput').addEventListener('change', async e => {
+  const v = num(e.target.value); if (v <= 0 || !S.db) return;
+  S.fx = v; render();
+  try { await S.db.doc('settings/main').set({fx: v}); toast('환율을 저장했어요'); } catch { toast('환율을 저장하지 못했어요'); }
+});
+
+/* ---------- GitHub 원본 저장소 ---------- */
+function lsGet(k){ try { return localStorage.getItem(k) || ''; } catch { return ''; } }
+function lsSet(k, v){ try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} }
+const GH = {repo: lsGet('ledger.repo'), path: 'data/ledger.json', token: lsGet('ledger.token'), login: lsGet('ledger.login')};
+const b64dec = t => new TextDecoder().decode(Uint8Array.from(atob(t.replace(/\s/g, '')), c => c.charCodeAt(0)));
+const b64enc = t => { const b = new TextEncoder().encode(t); let bin = ''; for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode(...b.subarray(i, i + 0x8000)); return btoa(bin); };
+function ghStore(){
+  let data = {settings:{}, projects:[], services:[]}, sha = null, loaded = false, local = false, lver = '';
+  const subs = {projects:[], services:[], settings:[]};
+  const api = (path, o = {}) => fetch('https://api.github.com/repos/' + GH.repo + path, {...o, cache:'no-store',
+    headers:{Accept:'application/vnd.github+json', Authorization:'Bearer ' + GH.token, 'X-GitHub-Api-Version':'2022-11-28', ...(o.headers || {})}});
+  const snap = arr => ({docs: arr.map(x => { const {id, ...rest} = x; return {id, data: () => rest}; }), metadata:{fromCache:false}});
+  const emit = () => {
+    subs.projects.forEach(f => f(snap(data.projects)));
+    subs.services.forEach(f => f(snap(data.services)));
+    subs.settings.forEach(f => f({data: () => data.settings}));
+  };
+  async function load(){
+    let lr;
+    if (GH.token){
+      const r = await api('/contents/' + GH.path);
+      if (r.status === 404 && (await api('')).ok){ data = {settings:{fx:1400}, projects:[], services:[]}; sha = null; S.ghNew = true; }   // 레포는 있는데 장부 파일이 없으면 빈 장부로 시작, 첫 저장 때 만든다
+      else if (!r.ok) throw {status: r.status};
+      else { const j = await r.json(); sha = j.sha; data = JSON.parse(b64dec(j.content)); }
+    } else if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && (lr = await fetch('/local-ledger', {cache:'no-store'}).catch(() => null)) && lr.ok){
+      // node scripts/serve.mjs 로 띄운 경우: 토큰 없이 이 컴퓨터의 data/ledger.json을 읽고 쓴다
+      local = true; S.local = true; lver = lr.headers.get('x-ledger-version') || ''; data = await lr.json();
+    } else {
+      let r = await fetch('../data/ledger.json', {cache:'no-store'}).catch(() => null);
+      if (!r || !r.ok) r = await fetch('data/ledger.json', {cache:'no-store'}).catch(() => null);
+      if (!r || !r.ok) throw {status: 'notoken'};
+      data = await r.json();
+    }
+    data.settings ||= {}; data.projects ||= []; data.services ||= [];
+    loaded = true; emit();
+  }
+  async function commit(mutate, msg){
+    for (let i = 0; i < 2; i++){
+      const next = JSON.parse(JSON.stringify(data)); mutate(next);
+      if (local){
+        const r = await fetch('/local-ledger', {method:'PUT', headers:{'x-ledger-version': lver}, body: JSON.stringify(next, null, 2) + '\n'});
+        if (r.ok){ lver = r.headers.get('x-ledger-version') || ''; data = next; emit(); return; }
+        if (r.status === 409 && i === 0){ await load(); continue; }
+        throw {code:'gh_http', status:r.status};
+      }
+      const r = await api('/contents/' + GH.path, {method:'PUT', body: JSON.stringify({message: msg, content: b64enc(JSON.stringify(next, null, 2) + '\n'), ...(sha ? {sha} : {})})});
+      if (r.ok){ sha = (await r.json()).content.sha; data = next; emit(); return; }
+      if ((r.status === 409 || r.status === 422) && i === 0){ await load(); continue; }   // 다른 곳에서 먼저 고쳤으면 새로 읽고 한 번 더
+      throw {code: r.status === 401 || r.status === 403 ? 'invalid_argument' : 'gh_http', status: r.status};
+    }
+  }
+  const nid = pre => pre + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const label = (name, body, id) => `${name === 'projects' ? '프로젝트' : '서비스'} ${body?.name || id}`;
+  return {
+    load, writable: () => !!GH.token || local,
+    collection: name => ({
+      onSnapshot(fn){ subs[name].push(fn); if (loaded) fn(snap(data[name])); return () => {}; },
+      doc(id){
+        id = id || nid(name === 'projects' ? 'p-' : 's-');
+        return { id,
+          set: body => commit(d => { const arr = d[name]; const i = arr.findIndex(x => x.id === id); const row = {id, ...body};
+            if (i >= 0) arr[i] = row; else arr.push(row); arr.sort((a, b) => a.id.localeCompare(b.id)); }, `장부: ${label(name, body, id)} 저장`),
+          delete: () => commit(d => { d[name] = d[name].filter(x => x.id !== id); }, `장부: ${id} 삭제`) };
+      }
+    }),
+    doc: () => ({ onSnapshot(fn){ subs.settings.push(fn); if (loaded) fn({data: () => data.settings}); return () => {}; }, set: body => commit(d => { d.settings = {...d.settings, ...body}; }, '장부: 설정 저장') })
+  };
+}
+
+/* ---------- boot ---------- */
+S.view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'costs';
+render();
+(async () => {
+  // claude.ai 안에서 열면 장부 저장소(사본), 그 밖에서는 GitHub 레포의 data/ledger.json(원본)을 쓴다
+  const inClaude = !!window.claude?.use;
+  let db = inClaude ? await window.claude.use('db').catch(() => null) : null;
+  const user = inClaude ? await window.claude.use('user').catch(() => null) : null;
+  if (!inClaude){
+    S.mode = 'gh';
+    db = ghStore();
+    try { await db.load(); S.canWrite = db.writable(); }
+    catch (e){ S.ghErr = e?.status || 'load'; S.failed = true; S.got = {p:true, s:true}; S.canWrite = false; S.db = null; render(); return; }
+  }
+  if (!db){ S.failed = true; S.got = {p:true, s:true}; S.canWrite = false; render(); return; }
+  S.db = db;
+  if (user){ const w = await user.can('data.write'); if (w === false) S.canWrite = false; }
+  const timer = setTimeout(() => { S.slow = true; render(); }, 10000);
+  const done = () => { if (S.got.p && S.got.s) clearTimeout(timer); };
+  const fail = () => { clearTimeout(timer); S.failed = true; render(); };
+  db.collection('projects').onSnapshot(snap => {
+    S.projects = snap.docs.map(d => ({id:d.id, ...d.data()})).sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (!snap.metadata.fromCache){ S.got.p = true; done(); }
+    render();
+  }, fail);
+  db.collection('services').onSnapshot(snap => {
+    S.services = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    if (!snap.metadata.fromCache){ S.got.s = true; done(); }
+    render();
+  }, fail);
+  db.doc('settings/main').onSnapshot(snap => {
+    if (S.mode !== 'gh' && snap.data()?.mirror){ S.mirror = String(snap.data().mirror); S.canWrite = false; render(); }
+    const fx = num(snap.data()?.fx); if (fx > 0){ S.fx = fx; if (document.activeElement !== $('#fxInput')) $('#fxInput').value = fx; render(); }
+  }, () => {});
+})();
+})();
+</script>

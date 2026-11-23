@@ -1,0 +1,7 @@
+{
+  "_about": "scripts/scan-repos.mjs 설정. owners: 훑을 GitHub 계정·조직, companyOwner: 여기 레포는 '회사' 프로젝트로 추가, ignoreRepos: 건너뛸 레포. ledger-setup 스킬이 채운다.",
+  "owners": [],
+  "companyOwner": "",
+  "ignoreRepos": [],
+  "skipForks": true
+}

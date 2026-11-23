@@ -1,0 +1,33 @@
+name: 장부 페이지 배포
+
+# docs/ 폴더(장부 페이지)만 GitHub Pages로 배포한다. 데이터(data/)는 올리지 않는다.
+# 페이지는 열 때 GitHub 토큰으로 프라이빗 레포의 data/ledger.json을 읽는다.
+on:
+  push:
+    branches: [main]
+    paths: ["docs/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deployment
+        uses: actions/deploy-pages@v4
