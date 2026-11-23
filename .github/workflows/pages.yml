@@ -2,6 +2,8 @@ name: 장부 페이지 배포
 
 # docs/ 폴더(장부 페이지)만 GitHub Pages로 배포한다. 데이터(data/)는 올리지 않는다.
 # 페이지는 열 때 각자의 GitHub 토큰으로 각자의 비공개 레포 data/ledger.json을 읽는다.
+# 템플릿 레포는 모두가 쓰는 공용 페이지를 배포한다.
+# 각자의 장부 레포는 자기 페이지를 원할 때만 (레포 변수 LEDGER_PAGES=on, 유료 계정이거나 레포가 공개일 때 가능)
 on:
   push:
     branches: [main]
@@ -15,22 +17,25 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  deploy:
-    # 템플릿 레포는 모두가 쓰는 공용 페이지를 배포한다.
-    # 각자의 장부 레포는 자기 페이지를 원할 때만 (레포 변수 LEDGER_PAGES=on, 유료 계정이거나 레포가 공개일 때 가능)
+  build:
     if: ${{ github.event.repository.is_template || vars.LEDGER_PAGES == 'on' }}
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
           path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v5
