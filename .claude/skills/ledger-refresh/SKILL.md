@@ -16,9 +16,11 @@ description: 서비스 비용 대시보드의 데이터를 갱신한다. 내 Git
 ## 절차
 1. `git pull --rebase`.
 2. **레포 확인**: `GH_TOKEN=$(gh auth token) node scripts/scan-repos.mjs`. 새로 추가된 프로젝트·서비스·연결과 `data/scan-report.md`의 "사람이 정할 것"을 기억해 둔다 (보고에 넣는다). 새 프로젝트가 있으면 그 레포의 README를 얕게 읽어 `desc`와 `runsOn`만 채워 둔다. 더 깊은 정리는 ledger-tidy가 한다.
-3. **비용 확인**: `data/cost-sources.json`을 읽는다. 없거나 비어 있으면 "비용을 읽어 올 곳이 정해지지 않았어요"라고 하고, 등록된 유료 서비스(`billing`이 usage·prepaid)와 그 `url`을 보여 주며 어떤 것을 등록할지 묻는다. 정해지면 아래 kind 형식으로 파일을 만든다.
+3. **비용 확인**: `data/cost-sources.json`을 읽는다. 없거나 비어 있으면 "비용을 읽어 올 곳이 정해지지 않았어요"라고 하고, ledger-setup의 6단계(이 사람의 유료 서비스로 목록 만들기 → 고르기 → `site`·`label` 넣어 저장 → 로그인 체크리스트 보여 주기)를 그대로 한다.
 4. 사용자의 로그인된 브라우저를 다루는 도구를 준비한다. Claude Code라면 Claude in Chrome 도구를 ToolSearch 한 번으로 불러온다 (tabs_context_mcp, tabs_create_mcp, tabs_close_mcp, navigate, get_page_text, computer, find, browser_batch). 다른 에이전트는 가진 브라우저 도구를 쓴다. **그런 도구가 없거나 연결돼 있지 않으면** 비용은 브라우저로 읽지 않는다: 출처마다 "이 화면에서 이 숫자를 알려 주세요"라고 사용자에게 물어 받은 값을 적거나, 대시보드에서 직접 입력하는 방법을 안내한다 (레포 확인 결과는 그대로 적는다). 브라우저 도구가 있으면 새 탭 하나에서만 일하고 끝나면 닫는다. 페이지는 연 뒤 4초쯤 기다렸다가 글자로 읽는다.
-5. 출처마다 아래 레시피대로 읽는다.
+5. 시작하며 한 줄로 알린다: "이 사이트들을 읽어요: <label들> — 로그인 안 된 곳은 건너뛸게요." 그다음 출처마다 아래 레시피대로 읽는다.
+   - 로그인 화면이 뜨거나 못 읽은 출처는 건너뛰고, 그 출처의 서비스들에 `{"autoError":"로그인 필요","autoErrorAt":<now>,"autoErrorSite":"<site>"}`를 적는다 (못 읽은 이유가 다르면 autoError에 짧게). 보고에 "<label> 로그인 필요 → <site> 에서 로그인한 뒤 다시 '갱신'"을 넣는다.
+   - 제대로 읽은 출처의 서비스들에는 `{"autoError":null,"autoErrorAt":null,"autoErrorSite":null}`로 지난 오류를 지운다.
 6. 읽은 값을 `node scripts/merge.mjs services <id> '<json>'`으로 적는다. 지금 시각 `date +%s000`, 이번 달 `date +%Y-%m`. 모든 갱신에 `"updatedAt":<now>,"autoAt":<now>,"autoSource":"Chrome · <화면 이름>"`을 넣는다 (사용자에게 받아 적은 값이면 `"autoSource":"직접 입력 · <화면 이름>"`).
 7. 갱신 시각을 남긴다: `node scripts/merge.mjs settings main '{"lastRefresh":<now>}'` (비용을 하나도 못 읽었어도 레포 확인을 했으면 남긴다).
 8. `git add data && git commit -m "데이터: 갱신 $(date +%F)" && git push` (밀리면 `git pull --rebase` 후 다시).
@@ -26,6 +28,7 @@ description: 서비스 비용 대시보드의 데이터를 갱신한다. 내 Git
 10. 보고: 레포 확인 결과(새 프로젝트·서비스·연결, 사람이 정할 것이 있으면 "정리하려면 '정리'"), 출처별 사용량 / 크레딧 차감 / 실제 청구, 선불 잔액(구매·프로모션 나눠서)과 30일 비용, 7일 안에 만료되는 크레딧과 사라질 금액, 무료 체험 종료까지 남은 날(14일 이하면 맨 위), 건너뛴 출처와 이유.
 
 ## 레시피 (kind별)
+모든 출처에 공통으로 `label`(사람이 읽는 이름)과 `site`(사용자가 로그인해 둘 주소)를 둔다. 없으면 kind 이름과 아래 첫 주소를 쓴다.
 
 ### gcp-billing — Google Cloud 결제 계정
 필드: `account`(결제 계정 ID), `projectQuery`(선택, URL의 project= 값), `projects`(GCP 프로젝트 ID → 등록된 서비스 id) 또는 `total`(계정 합계를 넣을 서비스 id), `trialCreditOn`(선택), `trialNote`(선택).

@@ -55,11 +55,29 @@ description: 서비스 비용 대시보드를 처음 세팅한다. 데이터를 
 - **휴대폰·다른 기기에서 (기본)**: 공용 페이지 `https://<템플릿 소유자>.github.io/<템플릿 레포 이름>/` (`data/upstream.json`의 repo로 만든다. 지금은 https://fkal829.github.io/service-cost-ledger-template/ ). 페이지의 '토큰 만드는 법'대로 **자기 데이터 레포 하나만 고른** 토큰을 한 번 넣으면 자기 데이터가 보인다. 페이지에는 데이터가 없고, 데이터는 브라우저가 자기 레포에서 바로 읽는다. 토큰은 그 브라우저에만 남는다.
 - **자기 주소로 따로 배포하고 싶으면 (선택)**: GitHub 유료 계정이어야 비공개 레포로 Pages를 만들 수 있다. 사용자 확인 후 `gh api -X POST repos/<repo>/pages -f build_type=workflow`, `gh variable set LEDGER_PAGES -b on`, `gh workflow run pages.yml`. 무료 계정이면 공용 페이지를 쓰라고 안내한다.
 
-## 6. 갱신 방법 정하기
+## 6. 비용 읽을 곳과 로그인 목록 (그 사람에게 맞게)
 정해진 시간에 혼자 도는 작업은 만들지 않는다. 갱신은 사용자가 "갱신"이라고 할 때 레포 확인과 비용 확인을 한 번에 한다 (ledger-refresh). 대시보드는 오래 갱신하지 않으면 알림을 띄운다.
-- 비용 출처: 등록된 유료 서비스를 보고 사용자에게 어떤 결제 계정·콘솔을 쓰는지 물어 kind별로 `data/cost-sources.json`에 적는다 (형식은 ledger-refresh 스킬 참고). 사용자가 지금 정하기 싫으면 비워 두고 "처음 '갱신' 할 때 정해요"라고 한다.
-- 결제 화면을 자동으로 읽으려면 로그인된 브라우저를 다루는 도구가 있어야 한다고 알린다 (Claude Code: Chrome에 Claude in Chrome 확장 + 각 서비스 로그인). 없으면 갱신 때 숫자를 물어보고 받아 적는다.
-- 마지막으로 `node scripts/merge.mjs settings main '{"lastRefresh":<now>}'` 후 커밋·푸시한다.
+
+1. 3단계에서 찾은 **유료이거나 유료일 수 있는 서비스**만 추린다 (`billing`이 free가 아닌 것). 무료 서비스는 로그인 목록에 넣지 않는다.
+2. 서비스마다 비용을 볼 수 있는 결제 화면을 정한다. 아는 곳은 ledger-refresh의 kind를 쓰고(GCP → gcp-billing, Claude API → claude-console, Vercel → vercel, OpenAI → openai), 그 밖의 서비스는 `page` kind로 그 서비스의 결제·사용량 화면 주소를 적는다. 주소를 모르면 서비스의 관리 콘솔(`url`)을 쓴다.
+3. 사용자에게 **이 사람에게 맞는 목록**을 한 번에 보여 주고 고르게 한다. 예:
+   ```
+   레포를 보니 이 유료 서비스들을 쓰고 있어요. 비용을 자동으로 읽을 곳을 골라 주세요.
+   ☑ Google Cloud — console.cloud.google.com/billing (결제 계정이 여러 개면 알려 주세요)
+   ☑ OpenAI API — platform.openai.com/settings/organization/billing
+   ☐ Notion — 정액이라 금액만 한 번 입력하면 돼요
+   ```
+   정액(monthly·yearly) 서비스는 자동으로 읽을 필요가 없으니 금액을 물어 한 번 적는다.
+4. 고른 것을 `data/cost-sources.json`에 적는다. 각 항목에 **`site`(로그인해 둘 주소)와 `label`(사람이 읽는 이름)**을 넣는다. 예: `{"kind":"gcp-billing","label":"Google Cloud","site":"https://console.cloud.google.com/billing","account":"…","projects":{…}}`.
+5. **로그인 체크리스트**를 보여 준다. 고른 것만, 이 사람의 사이트만:
+   ```
+   갱신 전에 Chrome에서 여기에 로그인해 두세요 (로그인이 풀리면 그 곳만 건너뛰고 알려 드려요)
+   ☐ Google Cloud  https://console.cloud.google.com/billing
+   ☐ OpenAI  https://platform.openai.com
+   ```
+   결제 화면을 자동으로 읽으려면 로그인된 브라우저를 다루는 도구가 있어야 한다 (Claude Code: Chrome에 Claude in Chrome 확장). 없으면 갱신 때 숫자를 물어보고 받아 적는다고 알린다.
+   - 사용자가 지금 정하기 싫으면 비워 두고 "처음 '갱신' 할 때 정해요"라고 한다.
+6. 마지막으로 `node scripts/merge.mjs settings main '{"lastRefresh":<now>}'` 후 커밋·푸시한다.
 
 ## 7. 마무리 보고
-- 대시보드 주소(로컬·공용 페이지), 프로젝트·서비스 수, 확인이 필요한 항목, 남은 할 일(휴대폰용 토큰, Chrome 로그인)과 "갱신은 '갱신'"를 짧게.
+- 대시보드 주소(로컬·공용 페이지), 프로젝트·서비스 수, 확인이 필요한 항목, 남은 할 일(휴대폰용 토큰, 위 로그인 체크리스트)과 "갱신은 '갱신'"를 짧게.

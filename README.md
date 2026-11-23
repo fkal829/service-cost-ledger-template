@@ -12,7 +12,7 @@
 
 > [!TIP]
 > **준비물** [Claude Code](https://claude.com/claude-code) 또는 [Codex](https://github.com/openai/codex) · [GitHub CLI](https://cli.github.com) (`gh auth login`) · [Node.js](https://nodejs.org) 18+<br>
-> **그다음엔** `갱신` · `정리` · `버전 업데이트` 한 단어면 돼요.<br>
+> **그다음엔** `갱신` · `정리` · `버전 업데이트` 한 단어면 돼요. 갱신 전에는 초기 세팅 때 알려 주는 결제 사이트에 Chrome으로 로그인해 두세요.<br>
 > **보기** [fkal829.github.io/service-cost-ledger-template](https://fkal829.github.io/service-cost-ledger-template/)
 
 ![서비스 비용 대시보드 화면 (예시 데이터)](assets/costs.png)
@@ -43,7 +43,7 @@
 ### 초기 세팅 때 AI가 하는 일
 1. 데이터를 저장할 **비공개** 레포 `service-cost-ledger`를 내 GitHub에 만들어 받아요.
 2. 내 레포들을 읽어 프로젝트와 외부 서비스를 정리해 채워요. 어느 계정·조직을 넣을지만 물어봐요.
-3. 비용을 어디서 읽을지(GCP, Claude Console 등) 물어보고 정해 둬요.
+3. 내 레포에서 찾은 **유료 서비스만 골라** 비용을 어디서 읽을지 정하고, **로그인해 둘 사이트 목록**을 알려 줘요.
 4. 보는 방법을 알려 줘요.
 
 이미 데이터 레포가 있으면, 그 폴더를 Claude Code나 Codex로 열고 `초기 세팅`이라고만 하면 돼요.
@@ -64,6 +64,8 @@
 | 초기 세팅, 정리, 버전 업데이트 | ✅ | ✅ |
 | 갱신: 새 레포·서비스 확인 | ✅ | ✅ |
 | 갱신: 결제 화면 자동으로 읽기 | ✅ (Chrome에 Claude in Chrome 확장) | 브라우저 도구가 없으면 숫자를 물어보고 받아 적어요 |
+
+결제 사이트 로그인이 풀려 있으면 그 곳만 건너뛰고, 대시보드 "확인 필요"에 **결제 화면 로그인 필요**와 로그인할 주소가 떠요.
 
 ### 보는 법
 | 어디서 | 어떻게 | 토큰 |
