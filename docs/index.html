@@ -1156,7 +1156,7 @@ function lsGet(k){ try { return localStorage.getItem(k) || ''; } catch { return 
 function lsSet(k, v){ try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} }
 const GH = {repo: lsGet('ledger.repo'), path: 'data/ledger.json', token: lsGet('ledger.token'), login: lsGet('ledger.login')};
 // 이 페이지의 버전과 새 버전을 확인할 템플릿 레포 (scripts/bump.mjs 가 같이 올린다)
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.4.1';
 const UPSTREAM = 'fkal829/service-cost-ledger-template';
 const verGt = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++){ if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
 async function checkUpdate(){

@@ -61,5 +61,7 @@ if (APPLY && (changed.length || added.length || removed.length || sigAdds.length
   if (sigAdds.length) writeFileSync(sigPath, JSON.stringify(sig, null, 2) + '\n');
   if (!existsSync(upFile)) writeFileSync(upFile, JSON.stringify({ repo: up.repo, branch: up.branch || 'main' }, null, 2) + '\n');
   summary.applied = true;
+  // 이 스크립트 자신이 바뀌었으면, 새 규칙(예: 지울 파일)이 적용되도록 한 번 더 실행해야 한다
+  if (files.includes('scripts/update-from-template.mjs')) summary.rerun = true;
 }
 console.log(JSON.stringify(summary, null, 2));
