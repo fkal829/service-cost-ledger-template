@@ -19,6 +19,8 @@ concurrency:
 
 jobs:
   deploy:
+    # 템플릿 레포 자체에서는 돌리지 않는다 (템플릿으로 만든 레포에서만)
+    if: ${{ !github.event.repository.is_template }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
