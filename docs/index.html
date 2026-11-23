@@ -513,7 +513,7 @@ function ghConnectHtml(){
   const loginBox = AUTH_SERVER ? `<div class="ghlogin">
     <b>GitHub로 로그인하면 내 데이터가 보여요</b>
     ${S.ghInstalled ? '<span class="hint">설치됐어요. 한 번 더 로그인해 주세요.</span>' : ''}
-    ${S.ghLoginErr ? '<span class="hint" style="color:var(--crit)">로그인을 마치지 못했어요. 다시 눌러 주세요.</span>' : ''}
+    ${S.ghLoginErr ? `<span class="hint" style="color:var(--crit)">로그인을 마치지 못했어요. 다시 눌러 주세요. (${esc(S.ghLoginErr)})</span>` : ''}
     <div><a class="btn primary" href="#" data-act="ghLogin">GitHub로 로그인</a></div>
     <span class="hint">데이터는 내 GitHub 비공개 레포(기본 <code>service-cost-ledger</code>)에 있어요. 이 페이지는 내가 허락한 그 레포만 읽고 써요.</span>
   </div>` : '';
@@ -1176,8 +1176,8 @@ function lsSet(k, v){ try { v ? localStorage.setItem(k, v) : localStorage.remove
 const GH = {repo: lsGet('ledger.repo'), path: 'data/ledger.json', token: lsGet('ledger.token'), login: lsGet('ledger.login'),
   refresh: lsGet('ledger.refresh'), exp: Number(lsGet('ledger.exp')) || 0};
 // GitHub 로그인용 작은 서버와 GitHub App (비우면 로그인 버튼 없이 토큰 방식만 보인다)
-const AUTH_SERVER = '';
-const APP_SLUG = '';
+const AUTH_SERVER = 'https://service-cost-dashboard-auth.vercel.app';
+const APP_SLUG = 'service-cost-dashboard-fkal829';
 const ghLoginUrl = () => {
   const st = Array.from(crypto.getRandomValues(new Uint8Array(18)), b => b.toString(16).padStart(2, '0')).join('');
   try { sessionStorage.setItem('ledger.state', st); } catch {}
@@ -1210,7 +1210,7 @@ async function refreshToken(){
   } catch { return false; }
 }
 // 이 페이지의 버전과 새 버전을 확인할 템플릿 레포 (scripts/bump.mjs 가 같이 올린다)
-const APP_VERSION = '1.7.1';
+const APP_VERSION = '1.8.0';
 const UPSTREAM = 'fkal829/service-cost-ledger-template';
 const verGt = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++){ if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
 async function checkUpdate(){

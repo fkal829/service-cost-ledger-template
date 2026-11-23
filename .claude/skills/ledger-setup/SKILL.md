@@ -51,7 +51,7 @@ description: 서비스 비용 대시보드를 처음 세팅한다. 데이터를 
 - 커밋 메시지: "데이터: 처음 세팅".
 
 ## 5. 보는 방법 안내
-- 공용 대시보드 `https://<템플릿 소유자>.github.io/<템플릿 레포 이름>/` 하나만 안내한다 (`data/upstream.json`의 repo로 만든다. 지금은 https://fkal829.github.io/service-cost-ledger-template/ ). 컴퓨터·휴대폰 모두 같은 주소다. 페이지의 '토큰 만드는 법'대로 **자기 데이터 레포 하나만 고른** 토큰을 한 번 넣으면 자기 데이터가 보인다. 페이지에는 데이터가 없고, 데이터는 브라우저가 자기 레포에서 바로 읽는다. 토큰은 그 브라우저에만 남는다.
+- 공용 대시보드 `https://<템플릿 소유자>.github.io/<템플릿 레포 이름>/` 하나만 안내한다 (`data/upstream.json`의 repo로 만든다. 지금은 https://fkal829.github.io/service-cost-ledger-template/ ). 컴퓨터·휴대폰 모두 같은 주소다. **GitHub로 로그인**을 누르고, 처음 한 번 나오는 '데이터 레포에 설치하기'에서 **Only select repositories → 자기 데이터 레포** 하나만 고르면 자기 데이터가 보인다. 토큰을 만들 필요는 없다 (로그인 서버가 안 될 때만 '토큰으로 연결'). 페이지에는 데이터가 없고, 데이터는 브라우저가 자기 레포에서 바로 읽는다. 토큰은 그 브라우저에만 남는다.
 - (사용자가 토큰 없이 보고 싶다고 할 때만) `node scripts/serve.mjs` → http://localhost:4321 로 이 컴퓨터에서 열 수 있다고 알려 준다.
 - (사용자가 자기 주소를 원할 때만) GitHub 유료 계정이면 `gh api -X POST repos/<repo>/pages -f build_type=workflow`, `gh variable set LEDGER_PAGES -b on`, `gh workflow run pages.yml`.
 

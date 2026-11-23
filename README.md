@@ -13,7 +13,7 @@
 > [!TIP]
 > **준비물** [Claude Code](https://claude.com/claude-code) 또는 [Codex](https://github.com/openai/codex) · [GitHub CLI](https://cli.github.com) (`gh auth login`) · [Node.js](https://nodejs.org) 18+<br>
 > **그다음엔** `갱신` · `정리` · `버전 업데이트` 한 단어면 돼요. 갱신 전에는 초기 세팅 때 알려 주는 결제 사이트에 Chrome으로 로그인해 두세요.<br>
-> **보기** [fkal829.github.io/service-cost-ledger-template](https://fkal829.github.io/service-cost-ledger-template/)
+> **보기** [fkal829.github.io/service-cost-ledger-template](https://fkal829.github.io/service-cost-ledger-template/) → **GitHub로 로그인**
 
 ![서비스 비용 대시보드 화면 (예시 데이터)](assets/costs.png)
 
@@ -68,9 +68,13 @@
 결제 사이트 로그인이 풀려 있으면 그 곳만 건너뛰고, 대시보드 "확인 필요"에 **결제 화면 로그인 필요**와 로그인할 주소가 떠요.
 
 ### 보는 법
-공용 대시보드 https://fkal829.github.io/service-cost-ledger-template/ 에서 봐요. 컴퓨터든 휴대폰이든 같은 주소예요. 처음 한 번 GitHub 토큰을 넣으면 돼요 (페이지에 만드는 법이 있어요).
+공용 대시보드 https://fkal829.github.io/service-cost-ledger-template/ 에서 **GitHub로 로그인**하면 돼요. 컴퓨터든 휴대폰이든 같은 주소예요.
+- 처음 한 번은 "데이터 레포에 설치하기"가 나와요. **Only select repositories → `service-cost-ledger`** 하나만 고르면 돼요. 대시보드는 허락한 그 레포만 읽고 써요.
+- 로그인은 8시간마다 끝나지만 알아서 이어져요.
 
-공용 대시보드에는 데이터가 없어요. 페이지를 연 사람의 브라우저가 그 사람 토큰으로 **그 사람 레포**에서 바로 읽어요. 그래서 같은 주소를 열어도 사람마다 자기 데이터가 보이고, 다른 사람(페이지 만든 사람 포함)에게 데이터가 가지 않아요. 토큰은 **데이터 레포 하나만** 고를 수 있게 만드세요.
+공용 대시보드에는 데이터가 없어요. 로그인한 사람의 브라우저가 **그 사람 레포**에서 바로 읽어요. 그래서 같은 주소를 열어도 사람마다 자기 데이터가 보이고, 다른 사람(페이지 만든 사람 포함)에게 데이터가 가지 않아요. 로그인을 처리하는 작은 서버(`auth/`)도 데이터는 거치지 않아요.
+
+로그인 서버가 안 될 때는 페이지의 "토큰으로 연결 (예비)"로 GitHub 토큰을 넣어 볼 수 있어요.
 
 ### 안전
 - 키·토큰·비밀번호는 데이터에 적지 않아요. 레포를 읽을 때도 환경변수 **이름**만 보고 `.env` 같은 실제 값 파일은 열지 않아요.
