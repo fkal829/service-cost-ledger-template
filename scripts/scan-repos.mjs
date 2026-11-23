@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// GitHub 레포를 훑어 장부(data/ledger.json)의 프로젝트·서비스 연결을 채운다.
-// - 장부에 없는 레포 → 새 프로젝트로 추가 (autoAdded 표시)
+// GitHub 레포를 훑어 데이터(data/ledger.json)의 프로젝트·서비스 연결을 채운다.
+// - 데이터에 없는 레포 → 새 프로젝트로 추가 (autoAdded 표시)
 // - 레포 코드에서 알아본 서비스 → 그 서비스의 usedBy에 프로젝트 연결 (없을 때만 추가)
 // - 지우거나 바꾸는 일은 하지 않고 data/scan-report.md에 적기만 한다
 // 필요한 환경변수: GH_TOKEN (레포 읽기 권한), 선택: GH_TOKEN_<OWNER 대문자, - 는 _> (그 소유자 전용 토큰)
@@ -106,7 +106,7 @@ async function main(){
   const before = JSON.stringify(ledger);
   const ignore = new Set((CONF.ignoreRepos || []).map(x => x.toLowerCase()));
   const rep = { added: [], newServices: [], linked: [], unknown: [], archived: [], errors: [], gone: [] };
-  // 장부 레포 자신은 훑지 않는다
+  // 데이터 레포 자신은 훑지 않는다
   const self = process.env.GITHUB_REPOSITORY || (() => { try { return execFileSync('git', ['-C', ROOT, 'remote', 'get-url', 'origin']).toString().trim().replace(/^.*github\.com[:/]/, '').replace(/\.git$/, ''); } catch { return ''; } })();
   if (self) ignore.add(self.toLowerCase());
   const byRepo = new Map();
@@ -143,7 +143,7 @@ async function main(){
         execFileSync('tar', ['-xzf', join(tmp, 'r.tgz'), '-C', tmp]);
         const top = readdirSync(tmp).find(n => n !== 'r.tgz' && statSync(join(tmp, n)).isDirectory());
         if (!top) continue;
-        if (existsSync(join(tmp, top, 'data/signatures.json')) && existsSync(join(tmp, top, 'data/ledger.json'))) continue;   // 다른 장부 레포는 건너뛴다
+        if (existsSync(join(tmp, top, 'data/signatures.json')) && existsSync(join(tmp, top, 'data/ledger.json'))) continue;   // 다른 데이터 레포는 건너뛴다
         const { hits, unknown } = scanTree(join(tmp, top));
         for (const [sid, ev] of Object.entries(hits)){
           let s = ledger.services.find(x => x.id === sid);
@@ -173,7 +173,7 @@ async function main(){
 
   const changed = JSON.stringify(ledger) !== before;
   const sec = (t, a, empty) => `\n## ${t}\n` + (a.length ? a.map(x => `- ${x}`).join('\n') : `- ${empty}`) + '\n';
-  const md = `# 레포 스캔 결과 (${TODAY})\n\n대상: ${CONF.owners.join(', ')} · 장부 ${changed ? '갱신함' : '변경 없음'}\n`
+  const md = `# 레포 스캔 결과 (${TODAY})\n\n대상: ${CONF.owners.join(', ')} · 데이터 ${changed ? '갱신함' : '변경 없음'}\n`
     + sec('새로 추가한 프로젝트', rep.added, '없음')
     + sec('새로 만든 서비스', rep.newServices, '없음')
     + sec('새로 연결한 서비스', rep.linked, '없음')

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 장부 항목 하나에 필드를 합친다. 갱신 작업(Claude든 사람이든)이 JSON을 손으로 고치지 않게 하려고 쓴다.
+// 데이터 항목 하나에 필드를 합친다. 갱신 작업(Claude든 사람이든)이 JSON을 손으로 고치지 않게 하려고 쓴다.
 // 사용: node scripts/merge.mjs services s-claude '{"remaining":286.9,"burn":111.98}'
 //       node scripts/merge.mjs settings main '{"lastRefresh":1795400000000}'
 //       객체 필드(history, usageHistory)는 기존 값에 합쳐지고, 나머지는 덮어쓴다. 값이 null이면 필드를 지운다.

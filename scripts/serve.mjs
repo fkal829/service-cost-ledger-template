@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// 토큰 없이 이 컴퓨터에서 장부를 보고 고친다. 페이지(docs/)를 띄우고, 저장하면 data/ledger.json에 바로 쓴다.
+// 토큰 없이 이 컴퓨터에서 데이터를 보고 고친다. 페이지(docs/)를 띄우고, 저장하면 data/ledger.json에 바로 쓴다.
 // 사용: node scripts/serve.mjs  → 브라우저에서 http://localhost:4321 (다른 기기에는 열리지 않는다)
-// 저장한 내용을 GitHub에 올리려면: git add data/ledger.json && git commit -m "장부 수정" && git push
+// 저장한 내용을 GitHub에 올리려면: git add data/ledger.json && git commit -m "데이터 수정" && git push
 import { createServer } from 'node:http';
 import { readFileSync, writeFileSync, statSync, existsSync } from 'node:fs';
 import { join, extname, normalize } from 'node:path';
@@ -36,6 +36,6 @@ createServer((req, res) => {
   res.end(readFileSync(file));
 }).listen(PORT, '127.0.0.1', () => {
   const u = `http://localhost:${PORT}`;
-  console.log(`장부: ${u}  (끄려면 Ctrl+C)`);
+  console.log(`데이터: ${u}  (끄려면 Ctrl+C)`);
   if (!process.env.NO_OPEN) execFile(process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'explorer' : 'xdg-open', [u], () => {});
 });

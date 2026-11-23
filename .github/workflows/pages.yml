@@ -1,9 +1,9 @@
-name: 장부 페이지 배포
+name: 대시보드 배포
 
-# docs/ 폴더(장부 페이지)만 GitHub Pages로 배포한다. 데이터(data/)는 올리지 않는다.
+# docs/ 폴더(대시보드)만 GitHub Pages로 배포한다. 데이터(data/)는 올리지 않는다.
 # 페이지는 열 때 각자의 GitHub 토큰으로 각자의 비공개 레포 data/ledger.json을 읽는다.
 # 템플릿 레포는 모두가 쓰는 공용 페이지를 배포한다.
-# 각자의 장부 레포는 자기 페이지를 원할 때만 (레포 변수 LEDGER_PAGES=on, 유료 계정이거나 레포가 공개일 때 가능)
+# 각자의 데이터 레포는 자기 페이지를 원할 때만 (레포 변수 LEDGER_PAGES=on, 유료 계정이거나 레포가 공개일 때 가능)
 on:
   push:
     branches: [main]

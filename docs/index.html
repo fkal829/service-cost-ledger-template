@@ -2,7 +2,7 @@
 <html lang="ko">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>서비스 비용 장부</title>
+<title>서비스 비용 대시보드</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -258,7 +258,7 @@ button.pcard:hover{border-color:var(--line-strong)}
 <div class="wrap">
   <div class="top">
     <div>
-      <h1>서비스 비용 장부</h1>
+      <h1>서비스 비용 대시보드</h1>
       <div class="sub" id="subline">프로젝트별로 쓰는 외부 서비스와 비용을 한곳에서 봅니다</div>
     </div>
     <div class="actions">
@@ -501,15 +501,15 @@ function render(){
 function ghConnectHtml(){
   const why = S.ghErr === 401 ? '토큰이 틀렸거나 만료됐어요.' : S.ghErr === 404 ? '레포를 찾지 못했어요. 이름과 토큰 권한(Contents)을 확인해 주세요.' : S.ghErr === 403 ? '토큰에 이 레포 권한이 없어요.' : S.ghErr && S.ghErr !== 'notoken' ? '불러오지 못했어요. 잠시 후 다시 시도해 주세요.' : '';
   return `<div class="notice gh"><form id="ghForm" class="ghform" autocomplete="off">
-    <b>GitHub 장부에 연결</b>
-    <span class="hint">장부는 GitHub 계정마다 따로예요. 내 계정의 비공개 레포(기본 이름 <code>service-cost-ledger</code>)의 <code>data/ledger.json</code>에 저장돼요. 그 레포만 고른 fine-grained 토큰(Contents 읽기·쓰기)을 넣어 주세요. 레포가 비어 있으면 빈 장부로 시작해요. 토큰은 이 브라우저에만 저장돼요.</span>
+    <b>GitHub에 연결</b>
+    <span class="hint">데이터는 GitHub 계정마다 따로예요. 내 계정의 비공개 레포(기본 이름 <code>service-cost-ledger</code>)에 <code>data/ledger.json</code> 파일로 저장돼요. 그 레포만 고른 fine-grained 토큰(Contents 읽기·쓰기)을 넣어 주세요. 레포가 비어 있으면 빈 데이터로 시작해요. 토큰은 이 브라우저에만 저장돼요.</span>
     ${why ? `<span class="hint" style="color:var(--crit)">${why}</span>` : ''}
     <div class="grid2"><input id="ghRepo" class="field-s" value="${esc(GH.repo)}" aria-label="레포 (소유자/이름)" placeholder="비우면 내계정/service-cost-ledger">
     <input id="ghToken" class="field-s" type="password" placeholder="github_pat_…" aria-label="GitHub 토큰"></div>
     <div><button class="btn primary" type="submit">연결</button></div>
     <details class="howto"${GH.token ? '' : ' open'}><summary>토큰 만드는 법 (2분)</summary>
       <ol>
-        <li>GitHub에 <b>장부를 둘 비공개 레포</b>가 있어야 해요. 없으면 <a href="https://github.com/new?name=service-cost-ledger&visibility=private" target="_blank" rel="noopener">새 레포 만들기 ↗</a>에서 이름 <code>service-cost-ledger</code>, <b>Private</b>로 만들어요. 비어 있어도 괜찮아요.</li>
+        <li>GitHub에 <b>데이터를 저장할 비공개 레포</b>가 있어야 해요. 없으면 <a href="https://github.com/new?name=service-cost-ledger&visibility=private" target="_blank" rel="noopener">새 레포 만들기 ↗</a>에서 이름 <code>service-cost-ledger</code>, <b>Private</b>로 만들어요. 비어 있어도 괜찮아요.</li>
         <li><a href="https://github.com/settings/personal-access-tokens/new?name=cost-ledger-page&description=%EC%84%9C%EB%B9%84%EC%8A%A4%20%EB%B9%84%EC%9A%A9%20%EC%9E%A5%EB%B6%80&expires_in=365&contents=write" target="_blank" rel="noopener"><b>토큰 만들기 화면 열기 ↗</b></a> (GitHub 로그인 필요)</li>
         <li><b>Token name</b>: <code>cost-ledger-page</code> (이름은 나중에 토큰 목록에서 알아보기 위한 것이라 아무거나 돼요). <b>Expiration</b>: 1년 정도.</li>
         <li><b>Repository access</b> → <b>Only select repositories</b> → <code>service-cost-ledger</code> 하나만 골라요. <span class="warn">All repositories는 고르지 마세요.</span></li>
@@ -525,14 +525,14 @@ function renderNotices(){
   if (S.got.p && S.got.s && !S.failed && S.services.length && S.mode !== undefined){
     const last = S.lastRefresh || Math.max(0, ...S.services.map(s => num(s.autoAt)));
     const days = last ? Math.floor((Date.now() - last) / 864e5) : null;
-    if (days === null || days >= 7) out.push(`<div class="notice"><span>${days === null ? '아직 갱신한 적이 없어요.' : `마지막 갱신 <b>${days}일 전</b>이에요.`} Claude에게 <b>"장부 갱신해 줘"</b>라고 하면 새 레포·서비스와 이번 달 비용을 한 번에 확인해요.</span></div>`);
+    if (days === null || days >= 7) out.push(`<div class="notice"><span>${days === null ? '아직 갱신한 적이 없어요.' : `마지막 갱신 <b>${days}일 전</b>이에요.`} Claude에게 <b>"갱신해 줘"</b>라고 하면 새 레포·서비스와 이번 달 비용을 한 번에 확인해요.</span></div>`);
   }
-  if (S.newVer) out.push(`<div class="notice"><span><b>새 버전 ${esc(S.newVer)}</b>이 있어요 (지금 ${APP_VERSION}). Claude에게 <b>"장부 업데이트해 줘"</b>라고 하면 데이터는 그대로 두고 코드만 바꿔요. <a href="https://github.com/${UPSTREAM}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">바뀐 점 ↗</a></span><button class="btn ghost" data-act="skipVer">닫기</button></div>`);
-  if (S.local) out.push(`<div class="notice"><span>이 컴퓨터의 <code>data/ledger.json</code>을 열고 있어요. 저장하면 파일에 바로 써요. GitHub에 올리려면 커밋·푸시하거나 Claude에게 "장부 올려 줘"라고 하세요.</span></div>`);
+  if (S.newVer) out.push(`<div class="notice"><span><b>새 버전 ${esc(S.newVer)}</b>이 있어요 (지금 ${APP_VERSION}). Claude에게 <b>"새 버전 받아 줘"</b>라고 하면 데이터는 그대로 두고 코드만 바꿔요. <a href="https://github.com/${UPSTREAM}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">바뀐 점 ↗</a></span><button class="btn ghost" data-act="skipVer">닫기</button></div>`);
+  if (S.local) out.push(`<div class="notice"><span>이 컴퓨터의 <code>data/ledger.json</code>을 열고 있어요. 저장하면 파일에 바로 써요. GitHub에 올리려면 커밋·푸시하거나 Claude에게 "올려 줘"라고 하세요.</span></div>`);
   else if (S.mode === 'gh' && (!GH.token || S.ghErr)) out.push(ghConnectHtml());
   else if (S.failed) out.push(`<div class="notice err">저장소에 연결하지 못했어요. claude.ai에 로그인한 상태로 열어야 데이터가 보이고 저장돼요.</div>`);
-  if (S.mode === 'gh' && GH.token && !S.ghErr) out.push(`<div class="notice"><span>${GH.login ? `<b>${esc(GH.login)}</b> · ` : ''}<b>${esc(GH.repo)}</b>의 장부예요. ${S.ghNew ? '아직 비어 있어요. 첫 항목을 저장하면 장부 파일이 만들어져요.' : '저장하면 바로 커밋돼요.'}</span><button class="btn ghost" data-act="ghOut">로그아웃</button></div>`);
-  if (S.mirror) out.push(`<div class="notice"><span>이 장부는 GitHub 원본(<b>${esc(S.mirror)}</b>)의 사본이에요. 편집은 GitHub 장부에서 하고, 여기는 갱신 때 따라 바뀌어요.</span></div>`);
+  if (S.mode === 'gh' && GH.token && !S.ghErr) out.push(`<div class="notice"><span>${GH.login ? `<b>${esc(GH.login)}</b> · ` : ''}<b>${esc(GH.repo)}</b>의 데이터를 보고 있어요. ${S.ghNew ? '아직 비어 있어요. 첫 항목을 저장하면 데이터 파일이 만들어져요.' : '저장하면 바로 커밋돼요.'}</span><button class="btn ghost" data-act="ghOut">로그아웃</button></div>`);
+  if (S.mirror) out.push(`<div class="notice"><span>이 화면은 GitHub 레포(<b>${esc(S.mirror)}</b>)의 사본이에요. 편집은 GitHub 쪽 대시보드에서 하고, 여기는 갱신 때 따라 바뀌어요.</span></div>`);
   else if (S.slow && !(S.got.p && S.got.s)) out.push(`<div class="notice">데이터를 아직 불러오지 못했어요. 네트워크가 연결되면 자동으로 채워져요.</div>`);
   const ex = S.services.filter(s => s.isExample).length + S.projects.filter(p => p.isExample).length;
   if (ex && S.canWrite) out.push(`<div class="notice example"><span><b>예시</b> 표시가 붙은 항목은 샘플이에요. 예시를 편집해 저장하면 내 항목이 돼요.</span><span id="exArea"><button class="btn" data-act="clearEx">예시 지우기</button></span></div>`);
@@ -678,7 +678,7 @@ function ledgerList(){
 }
 
 function loadingOrEmpty(el, what){
-  if (S.mode === 'gh' && S.failed){ el.innerHTML = `<div class="empty"><strong>GitHub에 연결하면 장부가 보여요</strong>위에서 토큰을 넣어 주세요.</div>`; return true; }
+  if (S.mode === 'gh' && S.failed){ el.innerHTML = `<div class="empty"><strong>GitHub에 연결하면 내 데이터가 보여요</strong>위에서 토큰을 넣어 주세요.</div>`; return true; }
   if (!(S.got.p && S.got.s) && !S.failed){ el.innerHTML = `<div class="empty"><strong>불러오는 중이에요</strong>잠시만 기다려 주세요.</div>`; return true; }
   if (what){ el.innerHTML = what; return true; }
   return false;
@@ -850,7 +850,7 @@ function openDrawer(id){
             <div class="f"><label for="f_next" id="lab_next">다음 결제일</label><input id="f_next" type="date" value="${esc(v.nextDate ?? '')}" ${ro}></div>
             <div class="f"><label for="f_payer">결제 수단 · 담당</label><input id="f_payer" maxlength="80" placeholder="예: 법인카드(재무팀)" value="${esc(v.payer)}" ${ro}></div>
           </div>
-          <span class="hint">카드 번호나 API 키는 적지 마세요. 이 장부는 공유받은 사람이 읽을 수 있어요.</span>
+          <span class="hint">카드 번호나 API 키는 적지 마세요. 이 데이터는 공유받은 사람이 읽을 수 있어요.</span>
         </div>
         ${s && creditsOf(s).length ? `<div class="f"><span class="l">남은 크레딧</span><div class="creds">${creditsOf(s).sort((a, b) => (daysUntil(a.expires) ?? 1e9) - (daysUntil(b.expires) ?? 1e9)).map(cd => { const dl = daysUntil(cd.expires); return `<div><span>${esc(cd.name || '크레딧')}${cd.note ? `<div class="x">${esc(cd.note)}</div>` : ''}</span><span class="num">${fM(num(cd.left), s.currency)}${num(cd.total) ? `<span class="x"> / ${fM(num(cd.total), s.currency)}</span>` : ''}</span><span class="x">${cd.expires ? `${esc(cd.expires)}${dl !== null && dl >= 0 ? ` · D-${dl}` : ''}` : '만료 없음'}</span></div>`; }).join('')}</div>${(() => { const r = creditRun(s); return r ? `<span class="hint">월 ${fM(num(s.burn), s.currency)}씩 쓰면 약 ${Math.round(r.days)}일 버텨요${r.lost >= 1 ? ` · 그 사이 ${fM(Math.round(r.lost), s.currency)}은 쓰기 전에 만료돼요` : ''}.</span>` : ''; })()}</div>` : ''}
         ${s && s.billing === 'usage' ? sparkSVG(Object.values(s.usageHistory || {}).some(x => num(x) > 0) ? s.usageHistory : s.history, s.currency) : ''}
@@ -1007,7 +1007,7 @@ function openProjectView(id){
       <div class="body">
         ${p.desc ? `<div style="color:var(--muted)">${esc(p.desc)}</div>` : ''}
         <div class="arch-wrap">${archSVG(p)}</div>
-        <div class="legend"><span><i style="background:var(--accent)"></i>유료</span><span><i style="border:1.4px solid var(--muted)"></i>무료</span><span>점선: 배포·호스팅 관계</span><span>장부의 서비스 연결로 자동으로 그려요</span></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>유료</span><span><i style="border:1.4px solid var(--muted)"></i>무료</span><span>점선: 배포·호스팅 관계</span><span>등록된 서비스 연결로 자동으로 그려요</span></div>
         <dl class="pv-facts">
           ${p.runsOn ? `<dt>실행 위치</dt><dd>${esc(p.runsOn)}</dd>` : ''}
           ${p.repo ? `<dt>저장소</dt><dd class="num" style="font-size:12.5px">${esc(p.repo)}</dd>` : ''}
@@ -1156,7 +1156,7 @@ function lsGet(k){ try { return localStorage.getItem(k) || ''; } catch { return 
 function lsSet(k, v){ try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} }
 const GH = {repo: lsGet('ledger.repo'), path: 'data/ledger.json', token: lsGet('ledger.token'), login: lsGet('ledger.login')};
 // 이 페이지의 버전과 새 버전을 확인할 템플릿 레포 (scripts/bump.mjs 가 같이 올린다)
-const APP_VERSION = '1.4.1';
+const APP_VERSION = '1.5.0';
 const UPSTREAM = 'fkal829/service-cost-ledger-template';
 const verGt = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++){ if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
 async function checkUpdate(){
@@ -1184,7 +1184,7 @@ function ghStore(){
     let lr;
     if (GH.token){
       const r = await api('/contents/' + GH.path);
-      if (r.status === 404 && (await api('')).ok){ data = {settings:{fx:1400}, projects:[], services:[]}; sha = null; S.ghNew = true; }   // 레포는 있는데 장부 파일이 없으면 빈 장부로 시작, 첫 저장 때 만든다
+      if (r.status === 404 && (await api('')).ok){ data = {settings:{fx:1400}, projects:[], services:[]}; sha = null; S.ghNew = true; }   // 레포는 있는데 데이터 파일이 없으면 빈 데이터로 시작, 첫 저장 때 만든다
       else if (!r.ok) throw {status: r.status};
       else { const j = await r.json(); sha = j.sha; data = JSON.parse(b64dec(j.content)); }
     } else if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && (lr = await fetch('/local-ledger', {cache:'no-store'}).catch(() => null)) && lr.ok){
@@ -1224,11 +1224,11 @@ function ghStore(){
         id = id || nid(name === 'projects' ? 'p-' : 's-');
         return { id,
           set: body => commit(d => { const arr = d[name]; const i = arr.findIndex(x => x.id === id); const row = {id, ...body};
-            if (i >= 0) arr[i] = row; else arr.push(row); arr.sort((a, b) => a.id.localeCompare(b.id)); }, `장부: ${label(name, body, id)} 저장`),
-          delete: () => commit(d => { d[name] = d[name].filter(x => x.id !== id); }, `장부: ${id} 삭제`) };
+            if (i >= 0) arr[i] = row; else arr.push(row); arr.sort((a, b) => a.id.localeCompare(b.id)); }, `데이터: ${label(name, body, id)} 저장`),
+          delete: () => commit(d => { d[name] = d[name].filter(x => x.id !== id); }, `데이터: ${id} 삭제`) };
       }
     }),
-    doc: () => ({ onSnapshot(fn){ subs.settings.push(fn); if (loaded) fn({data: () => data.settings}); return () => {}; }, set: body => commit(d => { d.settings = {...d.settings, ...body}; }, '장부: 설정 저장') })
+    doc: () => ({ onSnapshot(fn){ subs.settings.push(fn); if (loaded) fn({data: () => data.settings}); return () => {}; }, set: body => commit(d => { d.settings = {...d.settings, ...body}; }, '데이터: 설정 저장') })
   };
 }
 
@@ -1237,7 +1237,7 @@ S.view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'cost
 render();
 checkUpdate();
 (async () => {
-  // claude.ai 안에서 열면 장부 저장소(사본), 그 밖에서는 GitHub 레포의 data/ledger.json(원본)을 쓴다
+  // claude.ai 안에서 열면 claude.ai 저장소(사본), 그 밖에서는 GitHub 레포의 data/ledger.json(원본)을 쓴다
   const inClaude = !!window.claude?.use;
   let db = inClaude ? await window.claude.use('db').catch(() => null) : null;
   const user = inClaude ? await window.claude.use('user').catch(() => null) : null;
