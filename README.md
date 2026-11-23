@@ -7,6 +7,12 @@
 - 선불·무료 체험 **크레딧이 언제 끝나는지**, 쓰기 전에 사라질 금액
 - 프로젝트마다 자동으로 그려지는 구성도
 
+![비용 화면: 이번 달 실제 지출, 확인할 것, 프로젝트별 비용, 서비스 목록](assets/costs.png)
+
+![프로젝트 구성도: 프로젝트가 쓰는 서비스를 자동으로 그린 그림](assets/arch.png)
+
+<sub>화면은 예시 데이터예요.</sub>
+
 ## 어떻게 동작하나요
 
 - **데이터를 저장할 레포가 하나 필요해요.** 내 GitHub에 비공개 레포(`service-cost-ledger`)를 하나 만들어 거기에 저장해요. 따로 서버나 DB가 없고, 특정 Claude 계정에 묶이지도 않아요.
@@ -73,3 +79,7 @@ Claude에게 **"갱신"** 한마디면 두 가지를 한 번에 해요. 정해�
 
 - `data/ledger.json` 데이터 · `data/signatures.json` 서비스 알아보는 규칙 · `data/scan-config.json` 스캔 대상 · `data/cost-sources.json` 비용 읽을 곳
 - `docs/index.html` 대시보드 · `scripts/` 레포 확인·데이터 고치기·로컬 서버·업데이트 · `.claude/skills/` Claude 스킬
+
+## 라이선스
+
+[MIT](LICENSE) — 자유롭게 쓰고 고치고 나눠도 돼요. 저작권 표시만 남겨 주세요.
